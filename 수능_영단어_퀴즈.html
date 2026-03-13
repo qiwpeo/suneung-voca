@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수능 영단어 퀴즈</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0e1a;--surface:#111827;--surface2:#1a2236;--surface3:#232d44;
+--accent:#6366f1;--accent2:#818cf8;--accent3:#a5b4fc;
+--green:#10b981;--green2:#34d399;--red:#ef4444;--red2:#f87171;
+--orange:#f59e0b;--text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+--radius:16px;--radius-sm:10px;
+}
+html{font-size:16px}
+body{font-family:'Noto Sans KR','Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 0%,rgba(99,102,241,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(16,185,129,.05) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+.app{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:20px 16px 40px}
+
+/* Header */
+.header{text-align:center;padding:30px 0 20px}
+.header h1{font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--green2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.5px}
+.header p{color:var(--text2);font-size:.85rem;margin-top:6px;font-weight:300}
+
+/* Setup Panel */
+.setup{background:var(--surface);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:28px 24px;margin-bottom:20px}
+.setup h2{font-size:1.1rem;font-weight:700;margin-bottom:20px;color:var(--text)}
+.opt-group{margin-bottom:20px}
+.opt-group label{display:block;font-size:.8rem;color:var(--text2);margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 16px;border-radius:40px;border:1.5px solid var(--surface3);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:.85rem;transition:all .2s;user-select:none;font-weight:500}
+.chip:hover{border-color:var(--accent);color:var(--accent3)}
+.chip.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 20px rgba(99,102,241,.25)}
+.chip.active-green{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 0 20px rgba(16,185,129,.25)}
+
+/* Quiz Mode Selector */
+.mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode-card{padding:16px;border-radius:var(--radius-sm);border:1.5px solid var(--surface3);background:var(--surface2);cursor:pointer;transition:all .2s;text-align:center}
+.mode-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.mode-card.active{border-color:var(--accent);background:rgba(99,102,241,.1);box-shadow:0 4px 20px rgba(99,102,241,.15)}
+.mode-card .icon{font-size:1.6rem;margin-bottom:6px}
+.mode-card .title{font-size:.85rem;font-weight:700;color:var(--text)}
+.mode-card .desc{font-size:.7rem;color:var(--text3);margin-top:3px}
+
+.btn-start{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent),#4f46e5);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:20px;transition:all .2s;font-family:inherit;letter-spacing:-.2px}
+.btn-start:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(99,102,241,.3)}
+.btn-start:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* Progress bar */
+.progress-wrap{margin-bottom:16px}
+.progress-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.progress-info span{font-size:.75rem;color:var(--text3);font-weight:500}
+.progress-info .qnum{color:var(--accent2);font-weight:700;font-size:.85rem}
+.progress-bar{height:6px;background:var(--surface3);border-radius:10px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:10px;transition:width .4s ease}
+
+/* Quiz Card */
+.quiz-card{background:var(--surface);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:32px 24px;margin-bottom:16px;position:relative;overflow:hidden}
+.quiz-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--green))}
+.quiz-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.quiz-word{font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-.5px}
+.quiz-pos{font-size:.75rem;color:var(--accent3);font-weight:500;margin-bottom:20px;display:inline-block;padding:3px 10px;background:rgba(99,102,241,.1);border-radius:20px}
+.quiz-hint{font-size:.8rem;color:var(--text3);margin-bottom:16px;font-style:italic;cursor:pointer;transition:color .2s}
+.quiz-hint:hover{color:var(--text2)}
+.quiz-hint.revealed{color:var(--text2);font-style:normal}
+
+/* 4-choice */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{padding:14px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--surface3);background:var(--surface2);cursor:pointer;font-size:.9rem;color:var(--text);transition:all .15s;text-align:left;font-family:inherit;line-height:1.4}
+.choice:hover:not(.disabled){border-color:var(--accent);background:rgba(99,102,241,.08);transform:scale(1.01)}
+.choice.correct{border-color:var(--green);background:rgba(16,185,129,.12);color:var(--green2);animation:pop .3s ease}
+.choice.wrong{border-color:var(--red);background:rgba(239,68,68,.08);color:var(--red2);animation:shake .4s ease}
+.choice.disabled{cursor:default;opacity:.6}
+.choice.show-correct{border-color:var(--green);background:rgba(16,185,129,.08)}
+
+/* Input mode */
+.input-wrap{display:flex;gap:10px;margin-bottom:12px}
+.input-wrap input{flex:1;padding:14px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--surface3);background:var(--surface2);color:var(--text);font-size:1rem;font-family:inherit;outline:none;transition:border-color .2s}
+.input-wrap input:focus{border-color:var(--accent)}
+.input-wrap input.correct-input{border-color:var(--green);background:rgba(16,185,129,.08)}
+.input-wrap input.wrong-input{border-color:var(--red);background:rgba(239,68,68,.08)}
+.btn-submit{padding:14px 24px;border:none;border-radius:var(--radius-sm);background:var(--accent);color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-submit:hover{background:#4f46e5}
+
+/* Flashcard */
+.flashcard{perspective:1000px;cursor:pointer;margin:20px 0}
+.flashcard-inner{position:relative;width:100%;min-height:200px;transition:transform .5s;transform-style:preserve-3d}
+.flashcard.flipped .flashcard-inner{transform:rotateY(180deg)}
+.flashcard-front,.flashcard-back{position:absolute;top:0;left:0;right:0;min-height:200px;backface-visibility:hidden;border-radius:var(--radius-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
+.flashcard-front{background:linear-gradient(135deg,var(--surface2),var(--surface3));border:1.5px solid rgba(255,255,255,.06)}
+.flashcard-back{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(16,185,129,.08));border:1.5px solid rgba(99,102,241,.2);transform:rotateY(180deg)}
+.flashcard-front .big{font-family:'Outfit',sans-serif;font-size:2.4rem;font-weight:800;color:var(--text)}
+.flashcard-front .sub{font-size:.8rem;color:var(--text3);margin-top:8px}
+.flashcard-back .meaning{font-size:1.4rem;font-weight:700;color:var(--accent2);margin-bottom:8px}
+.flashcard-back .example{font-size:.85rem;color:var(--text2);line-height:1.5}
+.flash-btns{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.flash-btn{padding:12px 28px;border-radius:var(--radius-sm);border:none;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.flash-btn.know{background:var(--green);color:#fff}
+.flash-btn.know:hover{box-shadow:0 4px 20px rgba(16,185,129,.3)}
+.flash-btn.dunno{background:var(--red);color:#fff}
+.flash-btn.dunno:hover{box-shadow:0 4px 20px rgba(239,68,68,.3)}
+.flash-btn.skip{background:var(--surface3);color:var(--text2)}
+.flip-hint{text-align:center;font-size:.75rem;color:var(--text3);margin-top:8px}
+
+/* Answer feedback */
+.feedback{margin-top:14px;padding:14px 16px;border-radius:var(--radius-sm);font-size:.85rem;line-height:1.5;display:none}
+.feedback.show{display:block;animation:fadeIn .3s ease}
+.feedback.correct-fb{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--green2)}
+.feedback.wrong-fb{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:var(--red2)}
+.feedback strong{font-weight:700}
+.feedback .example-text{margin-top:6px;color:var(--text2);font-size:.8rem}
+
+.btn-next{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);background:var(--surface3);color:var(--text);font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;margin-top:12px;transition:all .2s}
+.btn-next:hover{background:var(--surface2);border:1px solid var(--accent)}
+
+/* Result */
+.result{text-align:center;padding:40px 24px}
+.result-circle{width:160px;height:160px;border-radius:50%;margin:0 auto 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.result-circle::before{content:'';position:absolute;inset:0;border-radius:50%;border:4px solid var(--surface3)}
+.result-circle svg{position:absolute;inset:-2px;transform:rotate(-90deg)}
+.result-circle svg circle{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1.5s ease}
+.result-score{font-family:'Outfit',sans-serif;font-size:2.8rem;font-weight:800;line-height:1}
+.result-total{font-size:.85rem;color:var(--text3);font-weight:500}
+.result h2{font-size:1.3rem;font-weight:700;margin-bottom:8px}
+.result p{color:var(--text2);font-size:.85rem;margin-bottom:4px}
+.result-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:24px 0}
+.stat-card{background:var(--surface2);border-radius:var(--radius-sm);padding:16px 10px;text-align:center}
+.stat-card .stat-val{font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:700}
+.stat-card .stat-label{font-size:.7rem;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.stat-green{color:var(--green2)}
+.stat-red{color:var(--red2)}
+.stat-orange{color:var(--orange)}
+
+.wrong-list{margin-top:20px;text-align:left}
+.wrong-list h3{font-size:.9rem;font-weight:700;margin-bottom:12px;color:var(--red2)}
+.wrong-item{background:var(--surface2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--red)}
+.wrong-item .wi-word{font-family:'Outfit',sans-serif;font-weight:700;font-size:.95rem}
+.wrong-item .wi-meaning{font-size:.8rem;color:var(--text2)}
+
+.btn-restart{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent),#4f46e5);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:16px;font-family:inherit;transition:all .2s}
+.btn-restart:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(99,102,241,.3)}
+
+/* Animations */
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .4s ease}
+
+/* Responsive */
+@media(max-width:520px){
+.header h1{font-size:1.5rem}
+.quiz-word{font-size:1.7rem}
+.choices{grid-template-columns:1fr}
+.mode-cards{grid-template-columns:1fr 1fr}
+.result-stats{grid-template-columns:1fr 1fr 1fr}
+.flashcard-front .big{font-size:1.8rem}
+}
+
+/* Number selector */
+.num-select{display:flex;align-items:center;gap:12px}
+.num-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--surface3);background:var(--surface2);color:var(--text);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:inherit}
+.num-btn:hover{border-color:var(--accent)}
+.num-display{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;min-width:50px;text-align:center;color:var(--accent2)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- SETUP SCREEN -->
+<div id="screen-setup">
+<div class="header">
+<h1>수능 영단어 퀴즈</h1>
+<p>고교기초부터 수능까지 · 672단어</p>
+</div>
+<div class="setup">
+<h2>퀴즈 설정</h2>
+
+<div class="opt-group">
+<label>📚 단어 범위</label>
+<div class="chips" id="levelChips">
+<div class="chip active" data-lv="1">① 고교기초 (226)</div>
+<div class="chip active" data-lv="2">② 고1-고2 (127)</div>
+<div class="chip active" data-lv="3">③ 수능 핵심 (319)</div>
+</div>
+</div>
+
+<div class="opt-group">
+<label>🎮 퀴즈 모드</label>
+<div class="mode-cards" id="modeCards">
+<div class="mode-card active" data-mode="4choice">
+<div class="icon">✅</div>
+<div class="title">4지선다</div>
+<div class="desc">영어 → 한국어 뜻 고르기</div>
+</div>
+<div class="mode-card" data-mode="4choice-rev">
+<div class="icon">🔄</div>
+<div class="title">4지선다 (역방향)</div>
+<div class="desc">한국어 뜻 → 영단어 고르기</div>
+</div>
+<div class="mode-card" data-mode="typing">
+<div class="icon">⌨️</div>
+<div class="title">직접 입력</div>
+<div class="desc">뜻 보고 영단어 타이핑</div>
+</div>
+<div class="mode-card" data-mode="flash">
+<div class="icon">🃏</div>
+<div class="title">플래시카드</div>
+<div class="desc">카드 뒤집기 자기평가</div>
+</div>
+</div>
+</div>
+
+<div class="opt-group">
+<label>📝 문제 수</label>
+<div class="num-select">
+<button class="num-btn" onclick="changeCount(-5)">−</button>
+<div class="num-display" id="numDisplay">20</div>
+<button class="num-btn" onclick="changeCount(5)">+</button>
+<div style="display:flex;gap:6px;margin-left:8px">
+<div class="chip" onclick="setCount(10)">10</div>
+<div class="chip" onclick="setCount(20)">20</div>
+<div class="chip" onclick="setCount(50)">50</div>
+<div class="chip" onclick="setCount(0)">전체</div>
+</div>
+</div>
+</div>
+
+<button class="btn-start" id="btnStart" onclick="startQuiz()">퀴즈 시작</button>
+</div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="screen-quiz" style="display:none">
+<div class="progress-wrap">
+<div class="progress-info">
+<span class="qnum" id="qNum">1 / 20</span>
+<span id="qScore">맞힌 수: 0</span>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+<div id="quizContent"></div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="screen-result" style="display:none"></div>
+
+</div>
+
+<script>
+const VOCAB = [{"w":"abandon","m":"버리다, 포기하다","p":"동사","ee":"He abandoned his plan.","ek":"그는 계획을 포기했다.","lv":1,"ln":"고교기초"},{"w":"ability","m":"능력","p":"명사","ee":"She has the ability to lead.","ek":"그녀는 이끄는 능력이 있다.","lv":1,"ln":"고교기초"},{"w":"abroad","m":"해외에, 해외로","p":"부사","ee":"He studied abroad.","ek":"그는 해외에서 공부했다.","lv":1,"ln":"고교기초"},{"w":"absent","m":"결석한, 부재의","p":"형용사","ee":"She was absent from school.","ek":"그녀는 학교에 결석했다.","lv":1,"ln":"고교기초"},{"w":"accept","m":"받아들이다, 수락하다","p":"동사","ee":"I accept your offer.","ek":"당신의 제안을 수락합니다.","lv":1,"ln":"고교기초"},{"w":"access","m":"접근, 이용","p":"명사/동사","ee":"Everyone has access to the internet.","ek":"모두가 인터넷에 접근할 수 있다.","lv":1,"ln":"고교기초"},{"w":"accident","m":"사고, 우연","p":"명사","ee":"There was a car accident.","ek":"자동차 사고가 있었다.","lv":1,"ln":"고교기초"},{"w":"achieve","m":"성취하다, 달성하다","p":"동사","ee":"She achieved her goal.","ek":"그녀는 목표를 달성했다.","lv":1,"ln":"고교기초"},{"w":"actual","m":"실제의, 사실상의","p":"형용사","ee":"The actual cost was higher.","ek":"실제 비용이 더 높았다.","lv":1,"ln":"고교기초"},{"w":"adapt","m":"적응하다, 개작하다","p":"동사","ee":"Animals adapt to the environment.","ek":"동물은 환경에 적응한다.","lv":1,"ln":"고교기초"},{"w":"add","m":"더하다, 추가하다","p":"동사","ee":"Please add sugar to the tea.","ek":"차에 설탕을 넣어주세요.","lv":1,"ln":"고교기초"},{"w":"admire","m":"존경하다, 감탄하다","p":"동사","ee":"I admire her courage.","ek":"나는 그녀의 용기를 존경한다.","lv":1,"ln":"고교기초"},{"w":"admit","m":"인정하다, 입학시키다","p":"동사","ee":"He admitted his mistake.","ek":"그는 실수를 인정했다.","lv":1,"ln":"고교기초"},{"w":"adopt","m":"채택하다, 입양하다","p":"동사","ee":"They adopted a new policy.","ek":"그들은 새 정책을 채택했다.","lv":1,"ln":"고교기초"},{"w":"advance","m":"진보, 전진하다","p":"명사/동사","ee":"Technology continues to advance.","ek":"기술은 계속 발전한다.","lv":1,"ln":"고교기초"},{"w":"advantage","m":"이점, 유리함","p":"명사","ee":"This gives us an advantage.","ek":"이것은 우리에게 이점을 준다.","lv":1,"ln":"고교기초"},{"w":"adventure","m":"모험","p":"명사","ee":"Life is an adventure.","ek":"인생은 모험이다.","lv":1,"ln":"고교기초"},{"w":"advice","m":"조언, 충고","p":"명사","ee":"She gave me good advice.","ek":"그녀는 좋은 조언을 해주었다.","lv":1,"ln":"고교기초"},{"w":"affect","m":"영향을 미치다","p":"동사","ee":"Weather affects our mood.","ek":"날씨는 기분에 영향을 미친다.","lv":1,"ln":"고교기초"},{"w":"afford","m":"~할 여유가 있다","p":"동사","ee":"I can't afford a new car.","ek":"새 차를 살 여유가 없다.","lv":1,"ln":"고교기초"},{"w":"agree","m":"동의하다","p":"동사","ee":"I agree with you.","ek":"당신에게 동의합니다.","lv":1,"ln":"고교기초"},{"w":"allow","m":"허락하다, 허용하다","p":"동사","ee":"They don't allow pets here.","ek":"여기서는 반려동물을 허용하지 않는다.","lv":1,"ln":"고교기초"},{"w":"although","m":"비록 ~이지만","p":"접속사","ee":"Although it rained, we went out.","ek":"비가 왔지만 우리는 나갔다.","lv":1,"ln":"고교기초"},{"w":"amaze","m":"놀라게 하다","p":"동사","ee":"The magic show amazed us.","ek":"마술 쇼가 우리를 놀라게 했다.","lv":1,"ln":"고교기초"},{"w":"amount","m":"양, 금액","p":"명사","ee":"A large amount of money.","ek":"많은 양의 돈.","lv":1,"ln":"고교기초"},{"w":"ancient","m":"고대의","p":"형용사","ee":"They found ancient ruins.","ek":"그들은 고대 유적을 발견했다.","lv":1,"ln":"고교기초"},{"w":"announce","m":"발표하다, 알리다","p":"동사","ee":"He announced the winner.","ek":"그가 우승자를 발표했다.","lv":1,"ln":"고교기초"},{"w":"anxious","m":"불안한, 걱정하는","p":"형용사","ee":"She felt anxious about the test.","ek":"그녀는 시험에 대해 불안했다.","lv":1,"ln":"고교기초"},{"w":"appear","m":"나타나다, ~인 것 같다","p":"동사","ee":"A rainbow appeared in the sky.","ek":"무지개가 하늘에 나타났다.","lv":1,"ln":"고교기초"},{"w":"apply","m":"지원하다, 적용하다","p":"동사","ee":"I applied for the job.","ek":"나는 그 직업에 지원했다.","lv":1,"ln":"고교기초"},{"w":"appreciate","m":"감사하다, 감상하다","p":"동사","ee":"I appreciate your help.","ek":"도움에 감사드립니다.","lv":1,"ln":"고교기초"},{"w":"approach","m":"접근하다, 접근법","p":"동사/명사","ee":"We approached the building.","ek":"우리는 건물에 접근했다.","lv":1,"ln":"고교기초"},{"w":"appropriate","m":"적절한","p":"형용사","ee":"Wear appropriate clothes.","ek":"적절한 옷을 입어라.","lv":1,"ln":"고교기초"},{"w":"argue","m":"주장하다, 논쟁하다","p":"동사","ee":"They argued about politics.","ek":"그들은 정치에 대해 논쟁했다.","lv":1,"ln":"고교기초"},{"w":"arrange","m":"정리하다, 마련하다","p":"동사","ee":"She arranged the flowers.","ek":"그녀는 꽃을 정리했다.","lv":1,"ln":"고교기초"},{"w":"article","m":"기사, 논문, 물품","p":"명사","ee":"I read an article online.","ek":"나는 온라인에서 기사를 읽었다.","lv":1,"ln":"고교기초"},{"w":"associate","m":"연관시키다, 동료","p":"동사/명사","ee":"I associate summer with vacation.","ek":"나는 여름을 휴가와 연관짓는다.","lv":1,"ln":"고교기초"},{"w":"assume","m":"가정하다, 추정하다","p":"동사","ee":"I assumed he was coming.","ek":"나는 그가 올 거라 추정했다.","lv":1,"ln":"고교기초"},{"w":"atmosphere","m":"대기, 분위기","p":"명사","ee":"The restaurant had a nice atmosphere.","ek":"그 식당은 분위기가 좋았다.","lv":1,"ln":"고교기초"},{"w":"attach","m":"붙이다, 첨부하다","p":"동사","ee":"Please attach the file.","ek":"파일을 첨부해 주세요.","lv":1,"ln":"고교기초"},{"w":"attempt","m":"시도하다, 시도","p":"동사/명사","ee":"He attempted to climb the mountain.","ek":"그는 산을 오르려고 시도했다.","lv":1,"ln":"고교기초"},{"w":"attend","m":"참석하다, 주의를 기울이다","p":"동사","ee":"She attended the meeting.","ek":"그녀는 회의에 참석했다.","lv":1,"ln":"고교기초"},{"w":"attitude","m":"태도, 자세","p":"명사","ee":"He has a positive attitude.","ek":"그는 긍정적인 태도를 가지고 있다.","lv":1,"ln":"고교기초"},{"w":"attract","m":"끌다, 매력을 느끼게 하다","p":"동사","ee":"The museum attracts many visitors.","ek":"그 박물관은 많은 방문객을 끈다.","lv":1,"ln":"고교기초"},{"w":"available","m":"이용 가능한","p":"형용사","ee":"Is this seat available?","ek":"이 자리 비어있나요?","lv":1,"ln":"고교기초"},{"w":"avoid","m":"피하다","p":"동사","ee":"Avoid making the same mistake.","ek":"같은 실수를 피해라.","lv":1,"ln":"고교기초"},{"w":"aware","m":"알고 있는, 인식하는","p":"형용사","ee":"Are you aware of the problem?","ek":"문제를 알고 있나요?","lv":1,"ln":"고교기초"},{"w":"balance","m":"균형, 잔고","p":"명사/동사","ee":"Keep a balance between work and life.","ek":"일과 삶의 균형을 유지해라.","lv":1,"ln":"고교기초"},{"w":"based","m":"~에 기반한","p":"형용사","ee":"The movie is based on a true story.","ek":"그 영화는 실화에 기반한다.","lv":1,"ln":"고교기초"},{"w":"basic","m":"기본적인","p":"형용사","ee":"Learn the basic rules first.","ek":"먼저 기본 규칙을 배워라.","lv":1,"ln":"고교기초"},{"w":"beat","m":"이기다, (심장이) 뛰다","p":"동사","ee":"Our team beat theirs.","ek":"우리 팀이 그들을 이겼다.","lv":1,"ln":"고교기초"},{"w":"behave","m":"행동하다","p":"동사","ee":"Behave yourself.","ek":"행동을 바르게 해라.","lv":1,"ln":"고교기초"},{"w":"believe","m":"믿다","p":"동사","ee":"I believe in you.","ek":"나는 너를 믿는다.","lv":1,"ln":"고교기초"},{"w":"belong","m":"속하다","p":"동사","ee":"This book belongs to me.","ek":"이 책은 내 것이다.","lv":1,"ln":"고교기초"},{"w":"benefit","m":"이익, 혜택","p":"명사/동사","ee":"Exercise has many benefits.","ek":"운동에는 많은 이점이 있다.","lv":1,"ln":"고교기초"},{"w":"besides","m":"게다가, ~외에","p":"부사/전치사","ee":"Besides English, she speaks French.","ek":"영어 외에 그녀는 프랑스어를 한다.","lv":1,"ln":"고교기초"},{"w":"beyond","m":"~너머에, ~을 초월하여","p":"전치사","ee":"It's beyond my understanding.","ek":"그것은 내 이해를 초월한다.","lv":1,"ln":"고교기초"},{"w":"blame","m":"비난하다, 탓","p":"동사/명사","ee":"Don't blame others.","ek":"다른 사람을 탓하지 마라.","lv":1,"ln":"고교기초"},{"w":"bother","m":"귀찮게 하다, 신경 쓰다","p":"동사","ee":"Don't bother me now.","ek":"지금 나를 귀찮게 하지 마.","lv":1,"ln":"고교기초"},{"w":"brain","m":"뇌, 두뇌","p":"명사","ee":"Use your brain.","ek":"머리를 써라.","lv":1,"ln":"고교기초"},{"w":"branch","m":"가지, 지점","p":"명사","ee":"The bank has many branches.","ek":"그 은행은 많은 지점이 있다.","lv":1,"ln":"고교기초"},{"w":"brave","m":"용감한","p":"형용사","ee":"She was very brave.","ek":"그녀는 매우 용감했다.","lv":1,"ln":"고교기초"},{"w":"budget","m":"예산","p":"명사","ee":"We need to cut the budget.","ek":"우리는 예산을 줄여야 한다.","lv":1,"ln":"고교기초"},{"w":"burden","m":"짐, 부담","p":"명사","ee":"It's a heavy burden.","ek":"그것은 무거운 짐이다.","lv":1,"ln":"고교기초"},{"w":"calm","m":"차분한, 진정시키다","p":"형용사/동사","ee":"Stay calm and relax.","ek":"차분히 있으면서 쉬어라.","lv":1,"ln":"고교기초"},{"w":"capable","m":"능력 있는, ~할 수 있는","p":"형용사","ee":"She is capable of doing it.","ek":"그녀는 그것을 할 능력이 있다.","lv":1,"ln":"고교기초"},{"w":"capital","m":"수도, 자본","p":"명사","ee":"Seoul is the capital of Korea.","ek":"서울은 한국의 수도이다.","lv":1,"ln":"고교기초"},{"w":"care","m":"관심, 돌보다","p":"명사/동사","ee":"Take care of yourself.","ek":"자신을 돌봐라.","lv":1,"ln":"고교기초"},{"w":"career","m":"직업, 경력","p":"명사","ee":"She has a successful career.","ek":"그녀는 성공적인 경력을 가졌다.","lv":1,"ln":"고교기초"},{"w":"cause","m":"원인, 야기하다","p":"명사/동사","ee":"What caused the accident?","ek":"무엇이 사고를 야기했나?","lv":1,"ln":"고교기초"},{"w":"celebrate","m":"축하하다","p":"동사","ee":"We celebrated his birthday.","ek":"우리는 그의 생일을 축하했다.","lv":1,"ln":"고교기초"},{"w":"certain","m":"확실한, 특정한","p":"형용사","ee":"I'm certain about it.","ek":"나는 그것에 대해 확실하다.","lv":1,"ln":"고교기초"},{"w":"challenge","m":"도전, 도전하다","p":"명사/동사","ee":"Accept the challenge.","ek":"도전을 받아들여라.","lv":1,"ln":"고교기초"},{"w":"chance","m":"기회, 가능성","p":"명사","ee":"Give me a chance.","ek":"기회를 주세요.","lv":1,"ln":"고교기초"},{"w":"character","m":"성격, 등장인물","p":"명사","ee":"She has a strong character.","ek":"그녀는 강한 성격을 가졌다.","lv":1,"ln":"고교기초"},{"w":"charge","m":"요금, 청구하다, 충전하다","p":"명사/동사","ee":"There is no charge for this.","ek":"이것은 무료입니다.","lv":1,"ln":"고교기초"},{"w":"claim","m":"주장하다, 청구하다","p":"동사","ee":"He claims to be innocent.","ek":"그는 무죄라고 주장한다.","lv":1,"ln":"고교기초"},{"w":"climate","m":"기후","p":"명사","ee":"The climate is changing.","ek":"기후가 변하고 있다.","lv":1,"ln":"고교기초"},{"w":"collect","m":"수집하다, 모으다","p":"동사","ee":"She collects stamps.","ek":"그녀는 우표를 수집한다.","lv":1,"ln":"고교기초"},{"w":"combine","m":"결합하다, 합치다","p":"동사","ee":"Combine these ingredients.","ek":"이 재료들을 합쳐라.","lv":1,"ln":"고교기초"},{"w":"comfort","m":"편안함, 위로하다","p":"명사/동사","ee":"She comforted the child.","ek":"그녀는 아이를 위로했다.","lv":1,"ln":"고교기초"},{"w":"command","m":"명령, 명령하다","p":"명사/동사","ee":"Follow the command.","ek":"명령을 따라라.","lv":1,"ln":"고교기초"},{"w":"common","m":"흔한, 공통의","p":"형용사","ee":"It's a common mistake.","ek":"그것은 흔한 실수이다.","lv":1,"ln":"고교기초"},{"w":"communicate","m":"소통하다, 전달하다","p":"동사","ee":"We communicate by email.","ek":"우리는 이메일로 소통한다.","lv":1,"ln":"고교기초"},{"w":"community","m":"지역사회, 공동체","p":"명사","ee":"A strong community.","ek":"강한 공동체.","lv":1,"ln":"고교기초"},{"w":"compare","m":"비교하다","p":"동사","ee":"Compare these two items.","ek":"이 두 항목을 비교해라.","lv":1,"ln":"고교기초"},{"w":"compete","m":"경쟁하다","p":"동사","ee":"They compete for the prize.","ek":"그들은 상을 위해 경쟁한다.","lv":1,"ln":"고교기초"},{"w":"complain","m":"불평하다","p":"동사","ee":"He always complains.","ek":"그는 항상 불평한다.","lv":1,"ln":"고교기초"},{"w":"complete","m":"완전한, 완성하다","p":"형용사/동사","ee":"Complete the assignment.","ek":"과제를 완성해라.","lv":1,"ln":"고교기초"},{"w":"complex","m":"복잡한","p":"형용사","ee":"It's a complex problem.","ek":"그것은 복잡한 문제이다.","lv":1,"ln":"고교기초"},{"w":"concern","m":"걱정, 관심사","p":"명사/동사","ee":"It concerns me.","ek":"그것이 나를 걱정하게 한다.","lv":1,"ln":"고교기초"},{"w":"condition","m":"상태, 조건","p":"명사","ee":"The car is in good condition.","ek":"차 상태가 좋다.","lv":1,"ln":"고교기초"},{"w":"conduct","m":"수행하다, 행동","p":"동사/명사","ee":"They conducted an experiment.","ek":"그들은 실험을 수행했다.","lv":1,"ln":"고교기초"},{"w":"confident","m":"자신감 있는","p":"형용사","ee":"She is confident in herself.","ek":"그녀는 자신에게 자신감이 있다.","lv":1,"ln":"고교기초"},{"w":"confirm","m":"확인하다","p":"동사","ee":"Please confirm your reservation.","ek":"예약을 확인해 주세요.","lv":1,"ln":"고교기초"},{"w":"conflict","m":"갈등, 충돌","p":"명사","ee":"There was a conflict between them.","ek":"그들 사이에 갈등이 있었다.","lv":1,"ln":"고교기초"},{"w":"connect","m":"연결하다","p":"동사","ee":"Connect the cable.","ek":"케이블을 연결해라.","lv":1,"ln":"고교기초"},{"w":"consider","m":"고려하다, ~으로 여기다","p":"동사","ee":"Consider all the options.","ek":"모든 선택지를 고려해라.","lv":1,"ln":"고교기초"},{"w":"consist","m":"구성되다","p":"동사","ee":"The team consists of five members.","ek":"팀은 다섯 명으로 구성된다.","lv":1,"ln":"고교기초"},{"w":"constant","m":"끊임없는, 일정한","p":"형용사","ee":"There is constant noise.","ek":"끊임없는 소음이 있다.","lv":1,"ln":"고교기초"},{"w":"construct","m":"건설하다, 구성하다","p":"동사","ee":"They constructed a new bridge.","ek":"그들은 새 다리를 건설했다.","lv":1,"ln":"고교기초"},{"w":"consume","m":"소비하다, 섭취하다","p":"동사","ee":"We consume too much energy.","ek":"우리는 에너지를 너무 많이 소비한다.","lv":1,"ln":"고교기초"},{"w":"contact","m":"연락, 접촉","p":"명사/동사","ee":"Contact me anytime.","ek":"언제든 연락해 주세요.","lv":1,"ln":"고교기초"},{"w":"contain","m":"포함하다, 담다","p":"동사","ee":"This box contains books.","ek":"이 상자에는 책이 들어 있다.","lv":1,"ln":"고교기초"},{"w":"content","m":"내용, 만족하는","p":"명사/형용사","ee":"I'm content with the result.","ek":"나는 결과에 만족한다.","lv":1,"ln":"고교기초"},{"w":"context","m":"맥락, 문맥","p":"명사","ee":"Understand the context.","ek":"맥락을 이해해라.","lv":1,"ln":"고교기초"},{"w":"continue","m":"계속하다","p":"동사","ee":"Please continue reading.","ek":"계속 읽어주세요.","lv":1,"ln":"고교기초"},{"w":"contribute","m":"기여하다, 공헌하다","p":"동사","ee":"He contributed to the project.","ek":"그는 프로젝트에 기여했다.","lv":1,"ln":"고교기초"},{"w":"control","m":"통제, 조절하다","p":"명사/동사","ee":"Control your emotions.","ek":"감정을 조절해라.","lv":1,"ln":"고교기초"},{"w":"convenient","m":"편리한","p":"형용사","ee":"It's convenient to use.","ek":"사용하기 편리하다.","lv":1,"ln":"고교기초"},{"w":"convince","m":"설득하다, 확신시키다","p":"동사","ee":"She convinced me to go.","ek":"그녀가 나를 설득해서 갔다.","lv":1,"ln":"고교기초"},{"w":"cooperate","m":"협력하다","p":"동사","ee":"We need to cooperate.","ek":"우리는 협력해야 한다.","lv":1,"ln":"고교기초"},{"w":"cope","m":"대처하다","p":"동사","ee":"She coped with the stress.","ek":"그녀는 스트레스에 대처했다.","lv":1,"ln":"고교기초"},{"w":"cost","m":"비용, (비용이) 들다","p":"명사/동사","ee":"How much does it cost?","ek":"얼마나 하나요?","lv":1,"ln":"고교기초"},{"w":"count","m":"세다, 중요하다","p":"동사","ee":"Every vote counts.","ek":"모든 투표가 중요하다.","lv":1,"ln":"고교기초"},{"w":"courage","m":"용기","p":"명사","ee":"It takes courage to speak up.","ek":"말하려면 용기가 필요하다.","lv":1,"ln":"고교기초"},{"w":"crash","m":"충돌하다, 추락","p":"동사/명사","ee":"The plane crashed.","ek":"비행기가 추락했다.","lv":1,"ln":"고교기초"},{"w":"create","m":"창조하다, 만들다","p":"동사","ee":"She created a new design.","ek":"그녀는 새 디자인을 만들었다.","lv":1,"ln":"고교기초"},{"w":"creature","m":"생물, 피조물","p":"명사","ee":"A strange creature appeared.","ek":"이상한 생물이 나타났다.","lv":1,"ln":"고교기초"},{"w":"crime","m":"범죄","p":"명사","ee":"Crime rates are rising.","ek":"범죄율이 오르고 있다.","lv":1,"ln":"고교기초"},{"w":"crisis","m":"위기","p":"명사","ee":"The country faced a crisis.","ek":"나라가 위기에 직면했다.","lv":1,"ln":"고교기초"},{"w":"critical","m":"비판적인, 중대한","p":"형용사","ee":"This is a critical moment.","ek":"이것은 중대한 순간이다.","lv":1,"ln":"고교기초"},{"w":"crowd","m":"군중, 붐비다","p":"명사/동사","ee":"The crowd cheered.","ek":"군중이 환호했다.","lv":1,"ln":"고교기초"},{"w":"cruel","m":"잔인한","p":"형용사","ee":"Don't be cruel to animals.","ek":"동물에게 잔인하게 굴지 마라.","lv":1,"ln":"고교기초"},{"w":"culture","m":"문화","p":"명사","ee":"Korean culture is unique.","ek":"한국 문화는 독특하다.","lv":1,"ln":"고교기초"},{"w":"curious","m":"호기심이 많은","p":"형용사","ee":"Children are naturally curious.","ek":"아이들은 본래 호기심이 많다.","lv":1,"ln":"고교기초"},{"w":"current","m":"현재의, 흐름","p":"형용사/명사","ee":"The current situation is stable.","ek":"현재 상황은 안정적이다.","lv":1,"ln":"고교기초"},{"w":"custom","m":"관습, 풍습","p":"명사","ee":"It's an old custom.","ek":"그것은 오래된 관습이다.","lv":1,"ln":"고교기초"},{"w":"damage","m":"손해, 피해를 주다","p":"명사/동사","ee":"The storm caused damage.","ek":"폭풍이 피해를 야기했다.","lv":1,"ln":"고교기초"},{"w":"danger","m":"위험","p":"명사","ee":"He is in danger.","ek":"그는 위험에 처해 있다.","lv":1,"ln":"고교기초"},{"w":"debate","m":"토론, 토론하다","p":"명사/동사","ee":"They debated the issue.","ek":"그들은 그 문제를 토론했다.","lv":1,"ln":"고교기초"},{"w":"decade","m":"10년","p":"명사","ee":"It happened a decade ago.","ek":"그것은 10년 전에 일어났다.","lv":1,"ln":"고교기초"},{"w":"decide","m":"결정하다","p":"동사","ee":"We need to decide now.","ek":"지금 결정해야 한다.","lv":1,"ln":"고교기초"},{"w":"declare","m":"선언하다, 신고하다","p":"동사","ee":"He declared his love.","ek":"그는 사랑을 선언했다.","lv":1,"ln":"고교기초"},{"w":"decline","m":"감소하다, 거절하다","p":"동사","ee":"Sales declined sharply.","ek":"매출이 급격히 감소했다.","lv":1,"ln":"고교기초"},{"w":"decrease","m":"감소하다, 줄이다","p":"동사","ee":"Prices decreased.","ek":"가격이 감소했다.","lv":1,"ln":"고교기초"},{"w":"define","m":"정의하다","p":"동사","ee":"Define the word clearly.","ek":"단어를 명확히 정의해라.","lv":1,"ln":"고교기초"},{"w":"degree","m":"정도, 학위, 도","p":"명사","ee":"She has a college degree.","ek":"그녀는 대학 학위가 있다.","lv":1,"ln":"고교기초"},{"w":"delay","m":"지연, 미루다","p":"명사/동사","ee":"The flight was delayed.","ek":"비행기가 지연되었다.","lv":1,"ln":"고교기초"},{"w":"deliver","m":"배달하다, 전달하다","p":"동사","ee":"They delivered the package.","ek":"그들은 소포를 배달했다.","lv":1,"ln":"고교기초"},{"w":"demand","m":"요구하다, 수요","p":"동사/명사","ee":"There is a high demand.","ek":"수요가 높다.","lv":1,"ln":"고교기초"},{"w":"demonstrate","m":"보여주다, 시위하다","p":"동사","ee":"He demonstrated his skill.","ek":"그는 기술을 보여주었다.","lv":1,"ln":"고교기초"},{"w":"deny","m":"부인하다, 거부하다","p":"동사","ee":"She denied the accusation.","ek":"그녀는 비난을 부인했다.","lv":1,"ln":"고교기초"},{"w":"depend","m":"의존하다, ~에 달려있다","p":"동사","ee":"It depends on the weather.","ek":"날씨에 달려 있다.","lv":1,"ln":"고교기초"},{"w":"describe","m":"묘사하다, 설명하다","p":"동사","ee":"Describe what you saw.","ek":"본 것을 묘사해라.","lv":1,"ln":"고교기초"},{"w":"design","m":"설계하다, 디자인","p":"동사/명사","ee":"She designed the logo.","ek":"그녀가 로고를 디자인했다.","lv":1,"ln":"고교기초"},{"w":"desire","m":"욕망, 바라다","p":"명사/동사","ee":"He has a strong desire to win.","ek":"그는 이기고 싶은 강한 욕망이 있다.","lv":1,"ln":"고교기초"},{"w":"despite","m":"~에도 불구하고","p":"전치사","ee":"Despite the rain, we went out.","ek":"비에도 불구하고 나갔다.","lv":1,"ln":"고교기초"},{"w":"destroy","m":"파괴하다","p":"동사","ee":"The fire destroyed the house.","ek":"불이 집을 파괴했다.","lv":1,"ln":"고교기초"},{"w":"detail","m":"세부사항","p":"명사","ee":"Pay attention to details.","ek":"세부사항에 주의를 기울여라.","lv":1,"ln":"고교기초"},{"w":"detect","m":"발견하다, 감지하다","p":"동사","ee":"They detected the error.","ek":"그들은 오류를 감지했다.","lv":1,"ln":"고교기초"},{"w":"determine","m":"결정하다, 알아내다","p":"동사","ee":"We need to determine the cause.","ek":"원인을 알아내야 한다.","lv":1,"ln":"고교기초"},{"w":"develop","m":"발전시키다, 개발하다","p":"동사","ee":"They developed a new app.","ek":"그들은 새 앱을 개발했다.","lv":1,"ln":"고교기초"},{"w":"devote","m":"헌신하다, 바치다","p":"동사","ee":"She devoted her life to art.","ek":"그녀는 예술에 인생을 바쳤다.","lv":1,"ln":"고교기초"},{"w":"differ","m":"다르다","p":"동사","ee":"Opinions differ on this topic.","ek":"이 주제에 대해 의견이 다르다.","lv":1,"ln":"고교기초"},{"w":"difficult","m":"어려운","p":"형용사","ee":"This problem is difficult.","ek":"이 문제는 어렵다.","lv":1,"ln":"고교기초"},{"w":"direct","m":"직접적인, 지시하다","p":"형용사/동사","ee":"He directed the movie.","ek":"그가 영화를 감독했다.","lv":1,"ln":"고교기초"},{"w":"disappear","m":"사라지다","p":"동사","ee":"The cat disappeared.","ek":"고양이가 사라졌다.","lv":1,"ln":"고교기초"},{"w":"disappoint","m":"실망시키다","p":"동사","ee":"The result disappointed us.","ek":"결과가 우리를 실망시켰다.","lv":1,"ln":"고교기초"},{"w":"discover","m":"발견하다","p":"동사","ee":"They discovered a new species.","ek":"그들은 새 종을 발견했다.","lv":1,"ln":"고교기초"},{"w":"discuss","m":"토론하다, 논의하다","p":"동사","ee":"Let's discuss the plan.","ek":"계획을 논의하자.","lv":1,"ln":"고교기초"},{"w":"disease","m":"질병","p":"명사","ee":"Heart disease is common.","ek":"심장병은 흔하다.","lv":1,"ln":"고교기초"},{"w":"display","m":"전시하다, 보여주다","p":"동사","ee":"The museum displays art.","ek":"박물관은 미술품을 전시한다.","lv":1,"ln":"고교기초"},{"w":"distance","m":"거리","p":"명사","ee":"The distance is 10 km.","ek":"거리는 10km이다.","lv":1,"ln":"고교기초"},{"w":"distinguish","m":"구별하다","p":"동사","ee":"Distinguish between facts and opinions.","ek":"사실과 의견을 구별해라.","lv":1,"ln":"고교기초"},{"w":"distribute","m":"분배하다, 배포하다","p":"동사","ee":"They distributed food.","ek":"그들은 음식을 분배했다.","lv":1,"ln":"고교기초"},{"w":"divide","m":"나누다, 분할하다","p":"동사","ee":"Divide the cake equally.","ek":"케이크를 공평하게 나눠라.","lv":1,"ln":"고교기초"},{"w":"domestic","m":"국내의, 가정의","p":"형용사","ee":"Domestic flights are cheaper.","ek":"국내 항공편이 더 싸다.","lv":1,"ln":"고교기초"},{"w":"doubt","m":"의심, 의심하다","p":"명사/동사","ee":"I doubt it's true.","ek":"그것이 사실인지 의심한다.","lv":1,"ln":"고교기초"},{"w":"dozen","m":"12개, 다수","p":"명사","ee":"I bought a dozen eggs.","ek":"달걀 한 다스를 샀다.","lv":1,"ln":"고교기초"},{"w":"due","m":"~때문에, 예정된","p":"형용사","ee":"The train is due at 3.","ek":"기차는 3시에 도착 예정이다.","lv":1,"ln":"고교기초"},{"w":"duty","m":"의무, 세금","p":"명사","ee":"It's my duty.","ek":"그것은 내 의무이다.","lv":1,"ln":"고교기초"},{"w":"eager","m":"열망하는, 간절한","p":"형용사","ee":"She is eager to learn.","ek":"그녀는 배우기를 열망한다.","lv":1,"ln":"고교기초"},{"w":"earn","m":"벌다, 얻다","p":"동사","ee":"He earns a good salary.","ek":"그는 좋은 급여를 번다.","lv":1,"ln":"고교기초"},{"w":"economy","m":"경제","p":"명사","ee":"The economy is growing.","ek":"경제가 성장하고 있다.","lv":1,"ln":"고교기초"},{"w":"educate","m":"교육하다","p":"동사","ee":"Schools educate children.","ek":"학교는 아이들을 교육한다.","lv":1,"ln":"고교기초"},{"w":"effect","m":"효과, 영향","p":"명사","ee":"The medicine had no effect.","ek":"약에 효과가 없었다.","lv":1,"ln":"고교기초"},{"w":"effort","m":"노력","p":"명사","ee":"It takes a lot of effort.","ek":"많은 노력이 필요하다.","lv":1,"ln":"고교기초"},{"w":"either","m":"둘 중 하나의","p":"형용사/부사","ee":"Either option is fine.","ek":"둘 중 어떤 것이든 괜찮다.","lv":1,"ln":"고교기초"},{"w":"element","m":"요소, 원소","p":"명사","ee":"Water is a key element.","ek":"물은 핵심 요소이다.","lv":1,"ln":"고교기초"},{"w":"eliminate","m":"제거하다","p":"동사","ee":"We need to eliminate waste.","ek":"쓰레기를 제거해야 한다.","lv":1,"ln":"고교기초"},{"w":"embarrass","m":"당황하게 하다","p":"동사","ee":"He was embarrassed.","ek":"그는 당황했다.","lv":1,"ln":"고교기초"},{"w":"emerge","m":"나타나다, 드러나다","p":"동사","ee":"New evidence emerged.","ek":"새로운 증거가 나타났다.","lv":1,"ln":"고교기초"},{"w":"emotion","m":"감정","p":"명사","ee":"She hid her emotions.","ek":"그녀는 감정을 숨겼다.","lv":1,"ln":"고교기초"},{"w":"emphasize","m":"강조하다","p":"동사","ee":"He emphasized the importance.","ek":"그는 중요성을 강조했다.","lv":1,"ln":"고교기초"},{"w":"employ","m":"고용하다, 사용하다","p":"동사","ee":"The company employs 500 people.","ek":"그 회사는 500명을 고용한다.","lv":1,"ln":"고교기초"},{"w":"enable","m":"가능하게 하다","p":"동사","ee":"Technology enables communication.","ek":"기술은 소통을 가능하게 한다.","lv":1,"ln":"고교기초"},{"w":"encounter","m":"마주치다, 직면하다","p":"동사","ee":"We encountered a problem.","ek":"우리는 문제에 직면했다.","lv":1,"ln":"고교기초"},{"w":"encourage","m":"격려하다, 장려하다","p":"동사","ee":"She encouraged me to try.","ek":"그녀가 시도하라고 격려했다.","lv":1,"ln":"고교기초"},{"w":"enemy","m":"적","p":"명사","ee":"Know your enemy.","ek":"적을 알아라.","lv":1,"ln":"고교기초"},{"w":"engage","m":"참여시키다, 약혼하다","p":"동사","ee":"Students are engaged in learning.","ek":"학생들이 학습에 참여한다.","lv":1,"ln":"고교기초"},{"w":"enormous","m":"거대한","p":"형용사","ee":"An enormous building.","ek":"거대한 건물.","lv":1,"ln":"고교기초"},{"w":"entire","m":"전체의","p":"형용사","ee":"The entire class passed.","ek":"학급 전체가 통과했다.","lv":1,"ln":"고교기초"},{"w":"entry","m":"입장, 항목","p":"명사","ee":"No entry without a ticket.","ek":"표 없이는 입장 불가.","lv":1,"ln":"고교기초"},{"w":"environment","m":"환경","p":"명사","ee":"Protect the environment.","ek":"환경을 보호해라.","lv":1,"ln":"고교기초"},{"w":"equal","m":"동등한, 같은","p":"형용사","ee":"All people are equal.","ek":"모든 사람은 동등하다.","lv":1,"ln":"고교기초"},{"w":"equipment","m":"장비","p":"명사","ee":"We need new equipment.","ek":"새 장비가 필요하다.","lv":1,"ln":"고교기초"},{"w":"escape","m":"탈출하다, 탈출","p":"동사/명사","ee":"He escaped from prison.","ek":"그는 감옥에서 탈출했다.","lv":1,"ln":"고교기초"},{"w":"essential","m":"필수적인","p":"형용사","ee":"Water is essential for life.","ek":"물은 생명에 필수적이다.","lv":1,"ln":"고교기초"},{"w":"establish","m":"설립하다, 확립하다","p":"동사","ee":"He established a company.","ek":"그는 회사를 설립했다.","lv":1,"ln":"고교기초"},{"w":"estimate","m":"추정하다, 추정치","p":"동사/명사","ee":"They estimated the cost.","ek":"그들은 비용을 추정했다.","lv":1,"ln":"고교기초"},{"w":"evaluate","m":"평가하다","p":"동사","ee":"Evaluate your performance.","ek":"성과를 평가해라.","lv":1,"ln":"고교기초"},{"w":"eventually","m":"결국, 마침내","p":"부사","ee":"He eventually succeeded.","ek":"그는 결국 성공했다.","lv":1,"ln":"고교기초"},{"w":"evidence","m":"증거","p":"명사","ee":"There is no evidence.","ek":"증거가 없다.","lv":1,"ln":"고교기초"},{"w":"evil","m":"악한, 악","p":"형용사/명사","ee":"Good versus evil.","ek":"선 대 악.","lv":1,"ln":"고교기초"},{"w":"exact","m":"정확한","p":"형용사","ee":"Tell me the exact time.","ek":"정확한 시간을 알려줘.","lv":1,"ln":"고교기초"},{"w":"examine","m":"검사하다, 조사하다","p":"동사","ee":"The doctor examined the patient.","ek":"의사가 환자를 검사했다.","lv":1,"ln":"고교기초"},{"w":"example","m":"예, 사례","p":"명사","ee":"Give me an example.","ek":"예를 들어봐라.","lv":1,"ln":"고교기초"},{"w":"except","m":"~을 제외하고","p":"전치사","ee":"Everyone came except Tom.","ek":"톰을 제외하고 모두 왔다.","lv":1,"ln":"고교기초"},{"w":"exchange","m":"교환하다, 환전","p":"동사/명사","ee":"They exchanged gifts.","ek":"그들은 선물을 교환했다.","lv":1,"ln":"고교기초"},{"w":"excite","m":"흥분시키다","p":"동사","ee":"The news excited everyone.","ek":"그 소식에 모두 흥분했다.","lv":1,"ln":"고교기초"},{"w":"excuse","m":"변명, 용서하다","p":"명사/동사","ee":"Excuse me.","ek":"실례합니다.","lv":1,"ln":"고교기초"},{"w":"exist","m":"존재하다","p":"동사","ee":"Dinosaurs no longer exist.","ek":"공룡은 더 이상 존재하지 않는다.","lv":1,"ln":"고교기초"},{"w":"expand","m":"확장하다","p":"동사","ee":"The company expanded.","ek":"회사가 확장했다.","lv":1,"ln":"고교기초"},{"w":"expect","m":"예상하다, 기대하다","p":"동사","ee":"I expected this result.","ek":"이 결과를 예상했다.","lv":1,"ln":"고교기초"},{"w":"expense","m":"비용, 경비","p":"명사","ee":"Travel expenses are high.","ek":"여행 경비가 높다.","lv":1,"ln":"고교기초"},{"w":"experience","m":"경험, 체험하다","p":"명사/동사","ee":"She has a lot of experience.","ek":"그녀는 경험이 많다.","lv":1,"ln":"고교기초"},{"w":"experiment","m":"실험, 실험하다","p":"명사/동사","ee":"They did an experiment.","ek":"그들은 실험을 했다.","lv":1,"ln":"고교기초"},{"w":"expert","m":"전문가","p":"명사","ee":"He is an expert in AI.","ek":"그는 AI 전문가이다.","lv":1,"ln":"고교기초"},{"w":"explain","m":"설명하다","p":"동사","ee":"Please explain the rule.","ek":"규칙을 설명해 주세요.","lv":1,"ln":"고교기초"},{"w":"explore","m":"탐험하다, 조사하다","p":"동사","ee":"They explored the cave.","ek":"그들은 동굴을 탐험했다.","lv":1,"ln":"고교기초"},{"w":"expose","m":"노출시키다, 폭로하다","p":"동사","ee":"He was exposed to danger.","ek":"그는 위험에 노출되었다.","lv":1,"ln":"고교기초"},{"w":"express","m":"표현하다, 급행의","p":"동사/형용사","ee":"Express your feelings.","ek":"감정을 표현해라.","lv":1,"ln":"고교기초"},{"w":"extend","m":"연장하다, 확장하다","p":"동사","ee":"They extended the deadline.","ek":"마감일을 연장했다.","lv":1,"ln":"고교기초"},{"w":"extra","m":"추가의, 여분의","p":"형용사","ee":"We have extra time.","ek":"여분의 시간이 있다.","lv":1,"ln":"고교기초"},{"w":"extreme","m":"극단적인, 극심한","p":"형용사","ee":"Extreme weather is dangerous.","ek":"극단적 날씨는 위험하다.","lv":1,"ln":"고교기초"},{"w":"absorb","m":"흡수하다","p":"동사","ee":"Plants absorb sunlight.","ek":"식물은 햇빛을 흡수한다.","lv":2,"ln":"고1-고2 필수"},{"w":"abstract","m":"추상적인, 요약","p":"형용사/명사","ee":"It's an abstract concept.","ek":"그것은 추상적인 개념이다.","lv":2,"ln":"고1-고2 필수"},{"w":"accompany","m":"동행하다, 수반하다","p":"동사","ee":"She accompanied me to the doctor.","ek":"그녀가 병원에 동행했다.","lv":2,"ln":"고1-고2 필수"},{"w":"accomplish","m":"달성하다, 이루다","p":"동사","ee":"We accomplished our mission.","ek":"우리는 임무를 달성했다.","lv":2,"ln":"고1-고2 필수"},{"w":"account","m":"계좌, 설명, 차지하다","p":"명사/동사","ee":"Exports account for 40%.","ek":"수출이 40%를 차지한다.","lv":2,"ln":"고1-고2 필수"},{"w":"accumulate","m":"축적하다, 쌓다","p":"동사","ee":"Snow accumulated overnight.","ek":"밤사이 눈이 쌓였다.","lv":2,"ln":"고1-고2 필수"},{"w":"accurate","m":"정확한","p":"형용사","ee":"The data must be accurate.","ek":"데이터가 정확해야 한다.","lv":2,"ln":"고1-고2 필수"},{"w":"acquaint","m":"익숙하게 하다","p":"동사","ee":"Get acquainted with the rules.","ek":"규칙에 익숙해져라.","lv":2,"ln":"고1-고2 필수"},{"w":"acquire","m":"얻다, 습득하다","p":"동사","ee":"She acquired new skills.","ek":"그녀는 새 기술을 습득했다.","lv":2,"ln":"고1-고2 필수"},{"w":"adequate","m":"적절한, 충분한","p":"형용사","ee":"We have adequate resources.","ek":"충분한 자원이 있다.","lv":2,"ln":"고1-고2 필수"},{"w":"adjust","m":"조절하다, 적응하다","p":"동사","ee":"Adjust the volume.","ek":"음량을 조절해라.","lv":2,"ln":"고1-고2 필수"},{"w":"administration","m":"행정, 관리","p":"명사","ee":"The school administration.","ek":"학교 행정부.","lv":2,"ln":"고1-고2 필수"},{"w":"adolescent","m":"청소년, 청소년기의","p":"명사/형용사","ee":"Adolescents need guidance.","ek":"청소년에게는 안내가 필요하다.","lv":2,"ln":"고1-고2 필수"},{"w":"affair","m":"사건, 업무","p":"명사","ee":"Current affairs.","ek":"시사 문제.","lv":2,"ln":"고1-고2 필수"},{"w":"agriculture","m":"농업","p":"명사","ee":"Agriculture is important here.","ek":"여기서 농업은 중요하다.","lv":2,"ln":"고1-고2 필수"},{"w":"alternative","m":"대안, 대체의","p":"명사/형용사","ee":"We need an alternative plan.","ek":"대안이 필요하다.","lv":2,"ln":"고1-고2 필수"},{"w":"amuse","m":"즐겁게 하다","p":"동사","ee":"The clown amused the children.","ek":"광대가 아이들을 즐겁게 했다.","lv":2,"ln":"고1-고2 필수"},{"w":"analyze","m":"분석하다","p":"동사","ee":"Analyze the data carefully.","ek":"데이터를 신중히 분석해라.","lv":2,"ln":"고1-고2 필수"},{"w":"annual","m":"연례의, 매년의","p":"형용사","ee":"The annual festival is in May.","ek":"연례 축제는 5월에 있다.","lv":2,"ln":"고1-고2 필수"},{"w":"anticipate","m":"예상하다, 기대하다","p":"동사","ee":"We anticipate problems.","ek":"문제를 예상한다.","lv":2,"ln":"고1-고2 필수"},{"w":"apparent","m":"명백한, 분명한","p":"형용사","ee":"It's apparent that he lied.","ek":"그가 거짓말한 것은 명백하다.","lv":2,"ln":"고1-고2 필수"},{"w":"appetite","m":"식욕, 욕구","p":"명사","ee":"I lost my appetite.","ek":"식욕을 잃었다.","lv":2,"ln":"고1-고2 필수"},{"w":"archaeology","m":"고고학","p":"명사","ee":"She studies archaeology.","ek":"그녀는 고고학을 공부한다.","lv":2,"ln":"고1-고2 필수"},{"w":"architecture","m":"건축, 건축양식","p":"명사","ee":"Modern architecture.","ek":"현대 건축.","lv":2,"ln":"고1-고2 필수"},{"w":"aspect","m":"측면, 양상","p":"명사","ee":"Consider every aspect.","ek":"모든 측면을 고려해라.","lv":2,"ln":"고1-고2 필수"},{"w":"assess","m":"평가하다, 산정하다","p":"동사","ee":"Assess the situation first.","ek":"먼저 상황을 평가해라.","lv":2,"ln":"고1-고2 필수"},{"w":"asset","m":"자산, 장점","p":"명사","ee":"Her skills are a great asset.","ek":"그녀의 기술은 큰 자산이다.","lv":2,"ln":"고1-고2 필수"},{"w":"assign","m":"배정하다, 부여하다","p":"동사","ee":"The teacher assigned homework.","ek":"선생님이 숙제를 내주셨다.","lv":2,"ln":"고1-고2 필수"},{"w":"assist","m":"돕다, 보조하다","p":"동사","ee":"I will assist you.","ek":"도와드리겠습니다.","lv":2,"ln":"고1-고2 필수"},{"w":"astronaut","m":"우주비행사","p":"명사","ee":"She dreams of being an astronaut.","ek":"그녀는 우주비행사를 꿈꾼다.","lv":2,"ln":"고1-고2 필수"},{"w":"authority","m":"권한, 당국","p":"명사","ee":"The authority approved it.","ek":"당국이 승인했다.","lv":2,"ln":"고1-고2 필수"},{"w":"automatic","m":"자동의","p":"형용사","ee":"The door is automatic.","ek":"문이 자동이다.","lv":2,"ln":"고1-고2 필수"},{"w":"ban","m":"금지하다, 금지","p":"동사/명사","ee":"Smoking is banned here.","ek":"여기서 흡연은 금지되어 있다.","lv":2,"ln":"고1-고2 필수"},{"w":"barrier","m":"장벽, 방해물","p":"명사","ee":"Language can be a barrier.","ek":"언어가 장벽이 될 수 있다.","lv":2,"ln":"고1-고2 필수"},{"w":"behalf","m":"대신하여, 이익","p":"명사","ee":"On behalf of the team.","ek":"팀을 대신하여.","lv":2,"ln":"고1-고2 필수"},{"w":"betray","m":"배신하다","p":"동사","ee":"He betrayed his friend.","ek":"그는 친구를 배신했다.","lv":2,"ln":"고1-고2 필수"},{"w":"bias","m":"편견, 편향","p":"명사","ee":"Avoid bias in research.","ek":"연구에서 편견을 피해라.","lv":2,"ln":"고1-고2 필수"},{"w":"bind","m":"묶다, 구속하다","p":"동사","ee":"The contract binds both parties.","ek":"계약이 양측을 구속한다.","lv":2,"ln":"고1-고2 필수"},{"w":"biology","m":"생물학","p":"명사","ee":"She majors in biology.","ek":"그녀는 생물학을 전공한다.","lv":2,"ln":"고1-고2 필수"},{"w":"board","m":"위원회, 판, 탑승하다","p":"명사/동사","ee":"Board the plane now.","ek":"지금 비행기에 탑승해라.","lv":2,"ln":"고1-고2 필수"},{"w":"bond","m":"유대, 결합","p":"명사","ee":"A strong bond between friends.","ek":"친구 간의 강한 유대.","lv":2,"ln":"고1-고2 필수"},{"w":"boost","m":"높이다, 증가시키다","p":"동사","ee":"Boost your confidence.","ek":"자신감을 높여라.","lv":2,"ln":"고1-고2 필수"},{"w":"boundary","m":"경계, 한계","p":"명사","ee":"Set clear boundaries.","ek":"명확한 경계를 설정해라.","lv":2,"ln":"고1-고2 필수"},{"w":"brief","m":"간결한, 짧은","p":"형용사","ee":"Give a brief summary.","ek":"간결한 요약을 해라.","lv":2,"ln":"고1-고2 필수"},{"w":"brilliant","m":"뛰어난, 빛나는","p":"형용사","ee":"She had a brilliant idea.","ek":"그녀가 뛰어난 아이디어를 냈다.","lv":2,"ln":"고1-고2 필수"},{"w":"broad","m":"넓은, 광범위한","p":"형용사","ee":"A broad range of topics.","ek":"광범위한 주제.","lv":2,"ln":"고1-고2 필수"},{"w":"brutal","m":"잔혹한","p":"형용사","ee":"The war was brutal.","ek":"전쟁은 잔혹했다.","lv":2,"ln":"고1-고2 필수"},{"w":"bureaucracy","m":"관료제","p":"명사","ee":"Too much bureaucracy slows things down.","ek":"과도한 관료제가 일을 느리게 한다.","lv":2,"ln":"고1-고2 필수"},{"w":"calculate","m":"계산하다","p":"동사","ee":"Calculate the total cost.","ek":"총 비용을 계산해라.","lv":2,"ln":"고1-고2 필수"},{"w":"campaign","m":"캠페인, 운동","p":"명사","ee":"A marketing campaign.","ek":"마케팅 캠페인.","lv":2,"ln":"고1-고2 필수"},{"w":"candidate","m":"후보자, 지원자","p":"명사","ee":"He is a strong candidate.","ek":"그는 유력한 후보이다.","lv":2,"ln":"고1-고2 필수"},{"w":"capacity","m":"능력, 용량, 수용력","p":"명사","ee":"The stadium is at full capacity.","ek":"경기장이 만원이다.","lv":2,"ln":"고1-고2 필수"},{"w":"capture","m":"포획하다, 사로잡다","p":"동사","ee":"They captured the moment.","ek":"그들은 순간을 포착했다.","lv":2,"ln":"고1-고2 필수"},{"w":"catastrophe","m":"대재앙","p":"명사","ee":"The flood was a catastrophe.","ek":"홍수는 대재앙이었다.","lv":2,"ln":"고1-고2 필수"},{"w":"category","m":"범주, 종류","p":"명사","ee":"It falls into this category.","ek":"그것은 이 범주에 속한다.","lv":2,"ln":"고1-고2 필수"},{"w":"cease","m":"멈추다, 중단하다","p":"동사","ee":"Cease all operations.","ek":"모든 작전을 중단해라.","lv":2,"ln":"고1-고2 필수"},{"w":"ceremony","m":"의식, 식","p":"명사","ee":"The graduation ceremony.","ek":"졸업식.","lv":2,"ln":"고1-고2 필수"},{"w":"chaos","m":"혼돈, 혼란","p":"명사","ee":"The city was in chaos.","ek":"도시가 혼란에 빠졌다.","lv":2,"ln":"고1-고2 필수"},{"w":"characteristic","m":"특징, 특성","p":"명사/형용사","ee":"A characteristic feature.","ek":"특징적인 모습.","lv":2,"ln":"고1-고2 필수"},{"w":"chemistry","m":"화학","p":"명사","ee":"She studies chemistry.","ek":"그녀는 화학을 공부한다.","lv":2,"ln":"고1-고2 필수"},{"w":"chronological","m":"시간순의","p":"형용사","ee":"In chronological order.","ek":"시간순으로.","lv":2,"ln":"고1-고2 필수"},{"w":"circulate","m":"순환하다, 유통하다","p":"동사","ee":"Blood circulates through the body.","ek":"혈액이 몸을 순환한다.","lv":2,"ln":"고1-고2 필수"},{"w":"circumstance","m":"상황, 환경","p":"명사","ee":"Under no circumstances.","ek":"어떤 상황에서도 아닌.","lv":2,"ln":"고1-고2 필수"},{"w":"cite","m":"인용하다","p":"동사","ee":"Cite your sources.","ek":"출처를 인용해라.","lv":2,"ln":"고1-고2 필수"},{"w":"civil","m":"시민의, 민간의","p":"형용사","ee":"Civil rights are important.","ek":"시민권은 중요하다.","lv":2,"ln":"고1-고2 필수"},{"w":"civilization","m":"문명","p":"명사","ee":"Ancient civilizations.","ek":"고대 문명들.","lv":2,"ln":"고1-고2 필수"},{"w":"classify","m":"분류하다","p":"동사","ee":"Classify the data.","ek":"데이터를 분류해라.","lv":2,"ln":"고1-고2 필수"},{"w":"cling","m":"매달리다, 집착하다","p":"동사","ee":"She clung to the rope.","ek":"그녀는 밧줄에 매달렸다.","lv":2,"ln":"고1-고2 필수"},{"w":"cognitive","m":"인지의","p":"형용사","ee":"Cognitive development.","ek":"인지 발달.","lv":2,"ln":"고1-고2 필수"},{"w":"collaborate","m":"협력하다","p":"동사","ee":"We collaborated on the project.","ek":"프로젝트에서 협력했다.","lv":2,"ln":"고1-고2 필수"},{"w":"collapse","m":"붕괴하다, 무너지다","p":"동사","ee":"The building collapsed.","ek":"건물이 무너졌다.","lv":2,"ln":"고1-고2 필수"},{"w":"colony","m":"식민지, 집단","p":"명사","ee":"An ant colony.","ek":"개미 군집.","lv":2,"ln":"고1-고2 필수"},{"w":"commerce","m":"상업, 무역","p":"명사","ee":"E-commerce is growing.","ek":"전자상거래가 성장 중이다.","lv":2,"ln":"고1-고2 필수"},{"w":"commit","m":"저지르다, 전념하다","p":"동사","ee":"He committed a crime.","ek":"그는 범죄를 저질렀다.","lv":2,"ln":"고1-고2 필수"},{"w":"committee","m":"위원회","p":"명사","ee":"The committee made a decision.","ek":"위원회가 결정을 내렸다.","lv":2,"ln":"고1-고2 필수"},{"w":"companion","m":"동반자, 동료","p":"명사","ee":"A faithful companion.","ek":"충실한 동반자.","lv":2,"ln":"고1-고2 필수"},{"w":"compel","m":"강요하다","p":"동사","ee":"We were compelled to act.","ek":"행동하도록 강요받았다.","lv":2,"ln":"고1-고2 필수"},{"w":"compensate","m":"보상하다","p":"동사","ee":"They compensated for the loss.","ek":"손실을 보상했다.","lv":2,"ln":"고1-고2 필수"},{"w":"competent","m":"유능한","p":"형용사","ee":"She is a competent worker.","ek":"그녀는 유능한 직원이다.","lv":2,"ln":"고1-고2 필수"},{"w":"complement","m":"보완하다, 보충물","p":"동사/명사","ee":"The colors complement each other.","ek":"색이 서로 보완한다.","lv":2,"ln":"고1-고2 필수"},{"w":"complicate","m":"복잡하게 하다","p":"동사","ee":"Don't complicate things.","ek":"일을 복잡하게 만들지 마라.","lv":2,"ln":"고1-고2 필수"},{"w":"comply","m":"따르다, 준수하다","p":"동사","ee":"Comply with the rules.","ek":"규칙을 준수해라.","lv":2,"ln":"고1-고2 필수"},{"w":"component","m":"구성 요소","p":"명사","ee":"A key component of success.","ek":"성공의 핵심 구성 요소.","lv":2,"ln":"고1-고2 필수"},{"w":"compose","m":"구성하다, 작곡하다","p":"동사","ee":"She composed a song.","ek":"그녀가 노래를 작곡했다.","lv":2,"ln":"고1-고2 필수"},{"w":"comprehend","m":"이해하다","p":"동사","ee":"I can't comprehend it.","ek":"이해할 수 없다.","lv":2,"ln":"고1-고2 필수"},{"w":"comprehensive","m":"종합적인, 포괄적인","p":"형용사","ee":"A comprehensive report.","ek":"종합 보고서.","lv":2,"ln":"고1-고2 필수"},{"w":"compromise","m":"타협하다, 타협","p":"동사/명사","ee":"We reached a compromise.","ek":"타협에 이르렀다.","lv":2,"ln":"고1-고2 필수"},{"w":"compulsory","m":"의무적인, 필수의","p":"형용사","ee":"Education is compulsory.","ek":"교육은 의무적이다.","lv":2,"ln":"고1-고2 필수"},{"w":"concentrate","m":"집중하다","p":"동사","ee":"Concentrate on your study.","ek":"공부에 집중해라.","lv":2,"ln":"고1-고2 필수"},{"w":"concept","m":"개념","p":"명사","ee":"A new concept.","ek":"새로운 개념.","lv":2,"ln":"고1-고2 필수"},{"w":"concrete","m":"구체적인, 콘크리트","p":"형용사/명사","ee":"Give a concrete example.","ek":"구체적인 예를 들어라.","lv":2,"ln":"고1-고2 필수"},{"w":"confine","m":"제한하다, 가두다","p":"동사","ee":"He was confined to his room.","ek":"그는 방에 갇혔다.","lv":2,"ln":"고1-고2 필수"},{"w":"confront","m":"직면하다, 맞서다","p":"동사","ee":"Confront your fears.","ek":"두려움에 맞서라.","lv":2,"ln":"고1-고2 필수"},{"w":"congress","m":"의회, 총회","p":"명사","ee":"Congress passed the law.","ek":"의회가 법을 통과시켰다.","lv":2,"ln":"고1-고2 필수"},{"w":"conscience","m":"양심","p":"명사","ee":"Follow your conscience.","ek":"양심을 따라라.","lv":2,"ln":"고1-고2 필수"},{"w":"conscious","m":"의식하는, 자각하는","p":"형용사","ee":"She was conscious of the danger.","ek":"그녀는 위험을 자각했다.","lv":2,"ln":"고1-고2 필수"},{"w":"consequence","m":"결과, 결말","p":"명사","ee":"Face the consequences.","ek":"결과에 직면해라.","lv":2,"ln":"고1-고2 필수"},{"w":"conservation","m":"보존, 보호","p":"명사","ee":"Wildlife conservation.","ek":"야생동물 보호.","lv":2,"ln":"고1-고2 필수"},{"w":"conservative","m":"보수적인","p":"형용사","ee":"A conservative approach.","ek":"보수적인 접근법.","lv":2,"ln":"고1-고2 필수"},{"w":"considerable","m":"상당한","p":"형용사","ee":"A considerable amount.","ek":"상당한 양.","lv":2,"ln":"고1-고2 필수"},{"w":"consistent","m":"일관된","p":"형용사","ee":"Be consistent in your work.","ek":"일에서 일관되게 해라.","lv":2,"ln":"고1-고2 필수"},{"w":"conspicuous","m":"눈에 띄는","p":"형용사","ee":"A conspicuous sign.","ek":"눈에 띄는 표지판.","lv":2,"ln":"고1-고2 필수"},{"w":"constitute","m":"구성하다","p":"동사","ee":"Women constitute 50%.","ek":"여성이 50%를 구성한다.","lv":2,"ln":"고1-고2 필수"},{"w":"constitution","m":"헌법, 구성","p":"명사","ee":"The nation's constitution.","ek":"국가 헌법.","lv":2,"ln":"고1-고2 필수"},{"w":"constraint","m":"제약, 제한","p":"명사","ee":"Budget constraints.","ek":"예산 제약.","lv":2,"ln":"고1-고2 필수"},{"w":"consult","m":"상담하다, 참고하다","p":"동사","ee":"Consult a doctor.","ek":"의사와 상담해라.","lv":2,"ln":"고1-고2 필수"},{"w":"contemporary","m":"현대의, 동시대의","p":"형용사","ee":"Contemporary art.","ek":"현대 미술.","lv":2,"ln":"고1-고2 필수"},{"w":"continent","m":"대륙","p":"명사","ee":"Asia is the largest continent.","ek":"아시아가 가장 큰 대륙이다.","lv":2,"ln":"고1-고2 필수"},{"w":"contract","m":"계약, 수축하다","p":"명사/동사","ee":"Sign the contract.","ek":"계약서에 서명해라.","lv":2,"ln":"고1-고2 필수"},{"w":"contradict","m":"모순되다, 반박하다","p":"동사","ee":"The evidence contradicts him.","ek":"증거가 그에 모순된다.","lv":2,"ln":"고1-고2 필수"},{"w":"contrast","m":"대조, 대비하다","p":"명사/동사","ee":"In contrast to his brother.","ek":"형과 대조적으로.","lv":2,"ln":"고1-고2 필수"},{"w":"controversy","m":"논쟁, 논란","p":"명사","ee":"The issue caused controversy.","ek":"그 문제가 논란을 일으켰다.","lv":2,"ln":"고1-고2 필수"},{"w":"convention","m":"관습, 대회, 협약","p":"명사","ee":"Break with convention.","ek":"관습을 깨다.","lv":2,"ln":"고1-고2 필수"},{"w":"convert","m":"전환하다, 개종하다","p":"동사","ee":"Convert Celsius to Fahrenheit.","ek":"섭씨를 화씨로 전환해라.","lv":2,"ln":"고1-고2 필수"},{"w":"convey","m":"전달하다, 운반하다","p":"동사","ee":"Convey the message.","ek":"메시지를 전달해라.","lv":2,"ln":"고1-고2 필수"},{"w":"corporate","m":"기업의, 법인의","p":"형용사","ee":"Corporate culture.","ek":"기업 문화.","lv":2,"ln":"고1-고2 필수"},{"w":"correspond","m":"일치하다, 서신하다","p":"동사","ee":"These numbers don't correspond.","ek":"이 숫자들은 일치하지 않는다.","lv":2,"ln":"고1-고2 필수"},{"w":"corrupt","m":"부패한, 타락시키다","p":"형용사/동사","ee":"A corrupt official.","ek":"부패한 관리.","lv":2,"ln":"고1-고2 필수"},{"w":"council","m":"의회, 위원회","p":"명사","ee":"The city council.","ek":"시 의회.","lv":2,"ln":"고1-고2 필수"},{"w":"countless","m":"셀 수 없는, 무수한","p":"형용사","ee":"Countless stars.","ek":"무수한 별들.","lv":2,"ln":"고1-고2 필수"},{"w":"craft","m":"공예, 기술","p":"명사","ee":"The craft of writing.","ek":"글쓰기 기술.","lv":2,"ln":"고1-고2 필수"},{"w":"criterion","m":"기준 (pl. criteria)","p":"명사","ee":"What are the criteria?","ek":"기준이 무엇인가?","lv":2,"ln":"고1-고2 필수"},{"w":"crucial","m":"결정적인, 중대한","p":"형용사","ee":"A crucial decision.","ek":"중대한 결정.","lv":2,"ln":"고1-고2 필수"},{"w":"cultivate","m":"경작하다, 기르다","p":"동사","ee":"Cultivate good habits.","ek":"좋은 습관을 기르라.","lv":2,"ln":"고1-고2 필수"},{"w":"cumulative","m":"누적의","p":"형용사","ee":"Cumulative effects.","ek":"누적 효과.","lv":2,"ln":"고1-고2 필수"},{"w":"cure","m":"치료하다, 치료","p":"동사/명사","ee":"There is no cure yet.","ek":"아직 치료법이 없다.","lv":2,"ln":"고1-고2 필수"},{"w":"curriculum","m":"교육과정","p":"명사","ee":"The school curriculum.","ek":"학교 교육과정.","lv":2,"ln":"고1-고2 필수"},{"w":"abolish","m":"폐지하다","p":"동사","ee":"They abolished slavery.","ek":"그들은 노예제를 폐지했다.","lv":3,"ln":"수능 핵심"},{"w":"accommodate","m":"수용하다, 편의를 제공하다","p":"동사","ee":"The hotel accommodates 200 guests.","ek":"호텔은 200명을 수용한다.","lv":3,"ln":"수능 핵심"},{"w":"acknowledge","m":"인정하다, 인지하다","p":"동사","ee":"He acknowledged his error.","ek":"그는 실수를 인정했다.","lv":3,"ln":"수능 핵심"},{"w":"aesthetic","m":"미적인, 심미적인","p":"형용사","ee":"An aesthetic sense.","ek":"미적 감각.","lv":3,"ln":"수능 핵심"},{"w":"afflict","m":"괴롭히다","p":"동사","ee":"He was afflicted with pain.","ek":"그는 고통에 시달렸다.","lv":3,"ln":"수능 핵심"},{"w":"aggregate","m":"총합, 합산하다","p":"명사/동사","ee":"The aggregate score.","ek":"총점.","lv":3,"ln":"수능 핵심"},{"w":"agile","m":"민첩한, 기민한","p":"형용사","ee":"Cats are agile animals.","ek":"고양이는 민첩한 동물이다.","lv":3,"ln":"수능 핵심"},{"w":"align","m":"정렬하다, 일치시키다","p":"동사","ee":"Align your goals.","ek":"목표를 일치시켜라.","lv":3,"ln":"수능 핵심"},{"w":"alleviate","m":"완화하다, 경감하다","p":"동사","ee":"Medicine alleviates pain.","ek":"약이 통증을 완화한다.","lv":3,"ln":"수능 핵심"},{"w":"allocate","m":"할당하다, 배분하다","p":"동사","ee":"Allocate resources wisely.","ek":"자원을 현명하게 배분해라.","lv":3,"ln":"수능 핵심"},{"w":"ally","m":"동맹국, 동맹을 맺다","p":"명사/동사","ee":"Japan is an ally.","ek":"일본은 동맹국이다.","lv":3,"ln":"수능 핵심"},{"w":"ambiguous","m":"모호한, 애매한","p":"형용사","ee":"An ambiguous statement.","ek":"모호한 진술.","lv":3,"ln":"수능 핵심"},{"w":"analogy","m":"유추, 유사성","p":"명사","ee":"Draw an analogy between A and B.","ek":"A와 B 사이에 유추를 하다.","lv":3,"ln":"수능 핵심"},{"w":"anonymous","m":"익명의","p":"형용사","ee":"An anonymous donor.","ek":"익명의 기부자.","lv":3,"ln":"수능 핵심"},{"w":"apparatus","m":"기구, 장치","p":"명사","ee":"A scientific apparatus.","ek":"과학 기구.","lv":3,"ln":"수능 핵심"},{"w":"applaud","m":"박수를 치다, 칭찬하다","p":"동사","ee":"The audience applauded.","ek":"관객이 박수를 쳤다.","lv":3,"ln":"수능 핵심"},{"w":"arbitrary","m":"임의의, 독단적인","p":"형용사","ee":"An arbitrary decision.","ek":"독단적인 결정.","lv":3,"ln":"수능 핵심"},{"w":"articulate","m":"명확히 표현하다","p":"동사/형용사","ee":"She articulated her views.","ek":"그녀는 견해를 명확히 표현했다.","lv":3,"ln":"수능 핵심"},{"w":"aspire","m":"열망하다","p":"동사","ee":"She aspires to be a doctor.","ek":"그녀는 의사가 되기를 열망한다.","lv":3,"ln":"수능 핵심"},{"w":"assemble","m":"모으다, 조립하다","p":"동사","ee":"Assemble the parts.","ek":"부품을 조립해라.","lv":3,"ln":"수능 핵심"},{"w":"assert","m":"주장하다, 단언하다","p":"동사","ee":"He asserted his innocence.","ek":"그는 결백을 주장했다.","lv":3,"ln":"수능 핵심"},{"w":"attribute","m":"속성, ~의 탓으로 돌리다","p":"명사/동사","ee":"Attribute success to hard work.","ek":"성공을 노력 덕으로 돌리다.","lv":3,"ln":"수능 핵심"},{"w":"authentic","m":"진짜의, 진정한","p":"형용사","ee":"An authentic experience.","ek":"진정한 경험.","lv":3,"ln":"수능 핵심"},{"w":"autonomous","m":"자율적인, 자치의","p":"형용사","ee":"Autonomous vehicles.","ek":"자율 주행 차량.","lv":3,"ln":"수능 핵심"},{"w":"avert","m":"피하다, 방지하다","p":"동사","ee":"Avert a disaster.","ek":"재난을 방지하다.","lv":3,"ln":"수능 핵심"},{"w":"bewilder","m":"당혹하게 하다","p":"동사","ee":"The puzzle bewildered me.","ek":"퍼즐이 나를 당혹하게 했다.","lv":3,"ln":"수능 핵심"},{"w":"bizarre","m":"기이한, 이상한","p":"형용사","ee":"A bizarre incident.","ek":"기이한 사건.","lv":3,"ln":"수능 핵심"},{"w":"bleak","m":"황량한, 암울한","p":"형용사","ee":"A bleak future.","ek":"암울한 미래.","lv":3,"ln":"수능 핵심"},{"w":"bolster","m":"강화하다, 지지하다","p":"동사","ee":"Bolster your argument.","ek":"주장을 강화해라.","lv":3,"ln":"수능 핵심"},{"w":"breach","m":"위반, 위반하다","p":"명사/동사","ee":"A breach of contract.","ek":"계약 위반.","lv":3,"ln":"수능 핵심"},{"w":"bureaucratic","m":"관료적인","p":"형용사","ee":"Bureaucratic procedures.","ek":"관료적인 절차.","lv":3,"ln":"수능 핵심"},{"w":"catalyst","m":"촉매, 촉진제","p":"명사","ee":"The event was a catalyst for change.","ek":"그 사건은 변화의 촉매였다.","lv":3,"ln":"수능 핵심"},{"w":"chronic","m":"만성적인","p":"형용사","ee":"A chronic disease.","ek":"만성 질환.","lv":3,"ln":"수능 핵심"},{"w":"coerce","m":"강요하다, 강제하다","p":"동사","ee":"He was coerced into signing.","ek":"서명을 강요당했다.","lv":3,"ln":"수능 핵심"},{"w":"coherent","m":"일관된, 논리정연한","p":"형용사","ee":"A coherent argument.","ek":"논리정연한 주장.","lv":3,"ln":"수능 핵심"},{"w":"coincide","m":"일치하다, 동시에 일어나다","p":"동사","ee":"The events coincided.","ek":"사건들이 동시에 일어났다.","lv":3,"ln":"수능 핵심"},{"w":"commodity","m":"상품, 물품","p":"명사","ee":"Oil is a valuable commodity.","ek":"석유는 귀중한 상품이다.","lv":3,"ln":"수능 핵심"},{"w":"compel","m":"강요하다","p":"동사","ee":"She felt compelled to help.","ek":"도와야 한다고 느꼈다.","lv":3,"ln":"수능 핵심"},{"w":"complacent","m":"자만하는, 안주하는","p":"형용사","ee":"Don't be complacent.","ek":"안주하지 마라.","lv":3,"ln":"수능 핵심"},{"w":"comply","m":"따르다, 준수하다","p":"동사","ee":"They complied with the law.","ek":"그들은 법을 준수했다.","lv":3,"ln":"수능 핵심"},{"w":"conceive","m":"생각해 내다, 임신하다","p":"동사","ee":"She conceived a new idea.","ek":"그녀가 새 아이디어를 생각해냈다.","lv":3,"ln":"수능 핵심"},{"w":"condemn","m":"비난하다, 선고하다","p":"동사","ee":"The world condemned the act.","ek":"세계가 그 행위를 비난했다.","lv":3,"ln":"수능 핵심"},{"w":"confess","m":"고백하다, 자백하다","p":"동사","ee":"He confessed to the crime.","ek":"그는 범행을 자백했다.","lv":3,"ln":"수능 핵심"},{"w":"conform","m":"따르다, 순응하다","p":"동사","ee":"Conform to the standard.","ek":"기준에 따라라.","lv":3,"ln":"수능 핵심"},{"w":"conquer","m":"정복하다","p":"동사","ee":"They conquered the territory.","ek":"그들은 영토를 정복했다.","lv":3,"ln":"수능 핵심"},{"w":"consensus","m":"합의, 의견 일치","p":"명사","ee":"We reached a consensus.","ek":"합의에 도달했다.","lv":3,"ln":"수능 핵심"},{"w":"consent","m":"동의, 동의하다","p":"명사/동사","ee":"She gave her consent.","ek":"그녀가 동의했다.","lv":3,"ln":"수능 핵심"},{"w":"contend","m":"주장하다, 경쟁하다","p":"동사","ee":"He contends that it's true.","ek":"그는 그것이 사실이라 주장한다.","lv":3,"ln":"수능 핵심"},{"w":"contingent","m":"~에 달린, 우발적인","p":"형용사","ee":"Success is contingent on effort.","ek":"성공은 노력에 달려 있다.","lv":3,"ln":"수능 핵심"},{"w":"contradict","m":"모순되다","p":"동사","ee":"Facts contradict his claims.","ek":"사실이 그의 주장과 모순된다.","lv":3,"ln":"수능 핵심"},{"w":"controversial","m":"논란이 많은","p":"형용사","ee":"A controversial topic.","ek":"논란이 많은 주제.","lv":3,"ln":"수능 핵심"},{"w":"converge","m":"수렴하다, 모이다","p":"동사","ee":"The roads converge at the center.","ek":"도로가 중심에서 만난다.","lv":3,"ln":"수능 핵심"},{"w":"coordinate","m":"조정하다, 조율하다","p":"동사","ee":"Coordinate the efforts.","ek":"노력을 조율해라.","lv":3,"ln":"수능 핵심"},{"w":"counterpart","m":"상대, 대응하는 것","p":"명사","ee":"Her Korean counterpart.","ek":"그녀의 한국측 상대.","lv":3,"ln":"수능 핵심"},{"w":"credentials","m":"자격, 자격증","p":"명사","ee":"Show your credentials.","ek":"자격증을 보여줘라.","lv":3,"ln":"수능 핵심"},{"w":"cumulative","m":"누적의","p":"형용사","ee":"Cumulative knowledge.","ek":"누적된 지식.","lv":3,"ln":"수능 핵심"},{"w":"curb","m":"억제하다, 제한하다","p":"동사","ee":"Curb your spending.","ek":"지출을 억제해라.","lv":3,"ln":"수능 핵심"},{"w":"cynical","m":"냉소적인","p":"형용사","ee":"A cynical remark.","ek":"냉소적인 발언.","lv":3,"ln":"수능 핵심"},{"w":"deem","m":"여기다, 간주하다","p":"동사","ee":"It was deemed necessary.","ek":"필요하다고 간주되었다.","lv":3,"ln":"수능 핵심"},{"w":"deficit","m":"적자, 부족","p":"명사","ee":"A budget deficit.","ek":"재정 적자.","lv":3,"ln":"수능 핵심"},{"w":"defy","m":"거역하다, 반항하다","p":"동사","ee":"She defied expectations.","ek":"그녀는 기대를 거스렀다.","lv":3,"ln":"수능 핵심"},{"w":"deliberate","m":"고의의, 신중한","p":"형용사","ee":"It was a deliberate act.","ek":"그것은 고의적 행위였다.","lv":3,"ln":"수능 핵심"},{"w":"democracy","m":"민주주의","p":"명사","ee":"Democracy requires participation.","ek":"민주주의는 참여를 요한다.","lv":3,"ln":"수능 핵심"},{"w":"demographic","m":"인구통계학적인","p":"형용사","ee":"Demographic changes.","ek":"인구통계학적 변화.","lv":3,"ln":"수능 핵심"},{"w":"depict","m":"묘사하다, 그리다","p":"동사","ee":"The painting depicts a battle.","ek":"그림이 전투를 묘사한다.","lv":3,"ln":"수능 핵심"},{"w":"deplete","m":"고갈시키다","p":"동사","ee":"Resources were depleted.","ek":"자원이 고갈되었다.","lv":3,"ln":"수능 핵심"},{"w":"deploy","m":"배치하다, 전개하다","p":"동사","ee":"Deploy the troops.","ek":"군대를 배치해라.","lv":3,"ln":"수능 핵심"},{"w":"deprive","m":"빼앗다, 박탈하다","p":"동사","ee":"Deprived of freedom.","ek":"자유를 박탈당하다.","lv":3,"ln":"수능 핵심"},{"w":"derive","m":"유래하다, 끌어내다","p":"동사","ee":"The word derives from Latin.","ek":"그 단어는 라틴어에서 유래한다.","lv":3,"ln":"수능 핵심"},{"w":"designate","m":"지정하다, 지명하다","p":"동사","ee":"Designate a leader.","ek":"지도자를 지명해라.","lv":3,"ln":"수능 핵심"},{"w":"deteriorate","m":"악화되다","p":"동사","ee":"His health deteriorated.","ek":"그의 건강이 악화되었다.","lv":3,"ln":"수능 핵심"},{"w":"devise","m":"고안하다, 계획하다","p":"동사","ee":"Devise a new strategy.","ek":"새 전략을 고안해라.","lv":3,"ln":"수능 핵심"},{"w":"devote","m":"헌신하다, 바치다","p":"동사","ee":"Devote time to studying.","ek":"공부에 시간을 바쳐라.","lv":3,"ln":"수능 핵심"},{"w":"diagnose","m":"진단하다","p":"동사","ee":"The doctor diagnosed the illness.","ek":"의사가 병을 진단했다.","lv":3,"ln":"수능 핵심"},{"w":"dilemma","m":"딜레마, 진퇴양난","p":"명사","ee":"Face a moral dilemma.","ek":"도덕적 딜레마에 직면하다.","lv":3,"ln":"수능 핵심"},{"w":"dimension","m":"차원, 크기","p":"명사","ee":"A new dimension of the problem.","ek":"문제의 새로운 차원.","lv":3,"ln":"수능 핵심"},{"w":"diminish","m":"줄어들다, 감소시키다","p":"동사","ee":"His influence diminished.","ek":"그의 영향력이 줄었다.","lv":3,"ln":"수능 핵심"},{"w":"diploma","m":"졸업장","p":"명사","ee":"He received his diploma.","ek":"그는 졸업장을 받았다.","lv":3,"ln":"수능 핵심"},{"w":"diplomacy","m":"외교","p":"명사","ee":"Diplomacy is crucial.","ek":"외교는 중요하다.","lv":3,"ln":"수능 핵심"},{"w":"discard","m":"버리다, 폐기하다","p":"동사","ee":"Discard old files.","ek":"오래된 파일을 버려라.","lv":3,"ln":"수능 핵심"},{"w":"discipline","m":"훈련, 규율, 학문","p":"명사","ee":"Self-discipline is key.","ek":"자기 훈련이 핵심이다.","lv":3,"ln":"수능 핵심"},{"w":"discourse","m":"담론, 담화","p":"명사","ee":"Political discourse.","ek":"정치적 담론.","lv":3,"ln":"수능 핵심"},{"w":"discretion","m":"재량, 신중함","p":"명사","ee":"Use your discretion.","ek":"재량을 사용해라.","lv":3,"ln":"수능 핵심"},{"w":"discrimination","m":"차별, 식별","p":"명사","ee":"Racial discrimination.","ek":"인종 차별.","lv":3,"ln":"수능 핵심"},{"w":"displace","m":"대체하다, 이주시키다","p":"동사","ee":"Machines displace workers.","ek":"기계가 노동자를 대체한다.","lv":3,"ln":"수능 핵심"},{"w":"dispose","m":"처분하다, 배치하다","p":"동사","ee":"Dispose of the waste properly.","ek":"쓰레기를 제대로 처분해라.","lv":3,"ln":"수능 핵심"},{"w":"dispute","m":"분쟁, 논쟁하다","p":"명사/동사","ee":"A border dispute.","ek":"국경 분쟁.","lv":3,"ln":"수능 핵심"},{"w":"distinct","m":"뚜렷한, 별개의","p":"형용사","ee":"Two distinct groups.","ek":"두 별개의 그룹.","lv":3,"ln":"수능 핵심"},{"w":"distort","m":"왜곡하다","p":"동사","ee":"Don't distort the facts.","ek":"사실을 왜곡하지 마라.","lv":3,"ln":"수능 핵심"},{"w":"diverse","m":"다양한","p":"형용사","ee":"A diverse population.","ek":"다양한 인구.","lv":3,"ln":"수능 핵심"},{"w":"doctrine","m":"교리, 원칙","p":"명사","ee":"A political doctrine.","ek":"정치적 원칙.","lv":3,"ln":"수능 핵심"},{"w":"domain","m":"영역, 분야","p":"명사","ee":"In the domain of science.","ek":"과학 영역에서.","lv":3,"ln":"수능 핵심"},{"w":"dominant","m":"지배적인, 우세한","p":"형용사","ee":"A dominant species.","ek":"지배적인 종.","lv":3,"ln":"수능 핵심"},{"w":"drastic","m":"과감한, 급격한","p":"형용사","ee":"Drastic measures.","ek":"과감한 조치.","lv":3,"ln":"수능 핵심"},{"w":"duration","m":"기간, 지속 시간","p":"명사","ee":"For the duration of the trip.","ek":"여행 기간 동안.","lv":3,"ln":"수능 핵심"},{"w":"dynamic","m":"역동적인, 활력 있는","p":"형용사","ee":"A dynamic leader.","ek":"역동적인 지도자.","lv":3,"ln":"수능 핵심"},{"w":"elaborate","m":"정교한, 상세히 설명하다","p":"형용사/동사","ee":"An elaborate plan.","ek":"정교한 계획.","lv":3,"ln":"수능 핵심"},{"w":"elevate","m":"높이다, 향상시키다","p":"동사","ee":"Elevate your thinking.","ek":"사고를 향상시켜라.","lv":3,"ln":"수능 핵심"},{"w":"eligible","m":"자격 있는","p":"형용사","ee":"She is eligible for the scholarship.","ek":"그녀는 장학금 자격이 있다.","lv":3,"ln":"수능 핵심"},{"w":"eloquent","m":"유창한, 웅변적인","p":"형용사","ee":"An eloquent speech.","ek":"유창한 연설.","lv":3,"ln":"수능 핵심"},{"w":"embed","m":"내장하다, 심다","p":"동사","ee":"The values are embedded in culture.","ek":"가치가 문화에 내장되어 있다.","lv":3,"ln":"수능 핵심"},{"w":"embrace","m":"포용하다, 받아들이다","p":"동사","ee":"Embrace change.","ek":"변화를 받아들여라.","lv":3,"ln":"수능 핵심"},{"w":"emission","m":"배출, 방출","p":"명사","ee":"Reduce carbon emissions.","ek":"탄소 배출을 줄여라.","lv":3,"ln":"수능 핵심"},{"w":"empathy","m":"공감, 감정이입","p":"명사","ee":"Show empathy to others.","ek":"타인에게 공감을 보여라.","lv":3,"ln":"수능 핵심"},{"w":"empirical","m":"경험적인, 실증적인","p":"형용사","ee":"Empirical evidence.","ek":"경험적 증거.","lv":3,"ln":"수능 핵심"},{"w":"endorse","m":"지지하다, 보증하다","p":"동사","ee":"She endorsed the product.","ek":"그녀가 제품을 보증했다.","lv":3,"ln":"수능 핵심"},{"w":"endure","m":"견디다, 지속하다","p":"동사","ee":"He endured great pain.","ek":"그는 큰 고통을 견뎠다.","lv":3,"ln":"수능 핵심"},{"w":"enforce","m":"시행하다, 집행하다","p":"동사","ee":"Enforce the law.","ek":"법을 시행해라.","lv":3,"ln":"수능 핵심"},{"w":"enhance","m":"향상시키다, 강화하다","p":"동사","ee":"Enhance your skills.","ek":"기술을 향상시켜라.","lv":3,"ln":"수능 핵심"},{"w":"enterprise","m":"기업, 사업","p":"명사","ee":"A private enterprise.","ek":"민간 기업.","lv":3,"ln":"수능 핵심"},{"w":"entity","m":"개체, 실체","p":"명사","ee":"A legal entity.","ek":"법인 단체.","lv":3,"ln":"수능 핵심"},{"w":"epidemic","m":"전염병, 유행병","p":"명사","ee":"A flu epidemic.","ek":"독감 유행.","lv":3,"ln":"수능 핵심"},{"w":"equilibrium","m":"균형, 평형","p":"명사","ee":"Maintain equilibrium.","ek":"균형을 유지해라.","lv":3,"ln":"수능 핵심"},{"w":"erode","m":"침식하다","p":"동사","ee":"The coast was eroded by waves.","ek":"해안이 파도에 침식되었다.","lv":3,"ln":"수능 핵심"},{"w":"err","m":"실수하다, 잘못하다","p":"동사","ee":"To err is human.","ek":"실수하는 것이 인간이다.","lv":3,"ln":"수능 핵심"},{"w":"erupt","m":"분출하다, 폭발하다","p":"동사","ee":"The volcano erupted.","ek":"화산이 분출했다.","lv":3,"ln":"수능 핵심"},{"w":"ethical","m":"윤리적인","p":"형용사","ee":"An ethical dilemma.","ek":"윤리적 딜레마.","lv":3,"ln":"수능 핵심"},{"w":"ethnic","m":"민족의, 인종의","p":"형용사","ee":"Ethnic diversity.","ek":"민족적 다양성.","lv":3,"ln":"수능 핵심"},{"w":"evoke","m":"불러일으키다","p":"동사","ee":"The music evoked memories.","ek":"음악이 기억을 불러일으켰다.","lv":3,"ln":"수능 핵심"},{"w":"evolve","m":"진화하다, 발전하다","p":"동사","ee":"Species evolve over time.","ek":"종은 시간이 지나며 진화한다.","lv":3,"ln":"수능 핵심"},{"w":"exaggerate","m":"과장하다","p":"동사","ee":"Don't exaggerate the problem.","ek":"문제를 과장하지 마라.","lv":3,"ln":"수능 핵심"},{"w":"excavate","m":"발굴하다","p":"동사","ee":"They excavated ancient ruins.","ek":"그들은 고대 유적을 발굴했다.","lv":3,"ln":"수능 핵심"},{"w":"exceed","m":"초과하다, 넘다","p":"동사","ee":"Don't exceed the speed limit.","ek":"속도 제한을 초과하지 마라.","lv":3,"ln":"수능 핵심"},{"w":"excerpt","m":"발췌, 인용문","p":"명사","ee":"An excerpt from the book.","ek":"책에서의 발췌.","lv":3,"ln":"수능 핵심"},{"w":"excessive","m":"과도한, 지나친","p":"형용사","ee":"Excessive use of plastic.","ek":"플라스틱의 과도한 사용.","lv":3,"ln":"수능 핵심"},{"w":"exclusive","m":"배타적인, 독점적인","p":"형용사","ee":"An exclusive interview.","ek":"독점 인터뷰.","lv":3,"ln":"수능 핵심"},{"w":"exempt","m":"면제된, 면제하다","p":"형용사/동사","ee":"He was exempted from the test.","ek":"그는 시험이 면제되었다.","lv":3,"ln":"수능 핵심"},{"w":"exert","m":"발휘하다, 행사하다","p":"동사","ee":"Exert influence.","ek":"영향력을 행사하다.","lv":3,"ln":"수능 핵심"},{"w":"exotic","m":"이국적인","p":"형용사","ee":"Exotic fruits.","ek":"이국적인 과일.","lv":3,"ln":"수능 핵심"},{"w":"exploit","m":"이용하다, 착취하다","p":"동사","ee":"Exploit natural resources.","ek":"천연자원을 이용하다.","lv":3,"ln":"수능 핵심"},{"w":"explicit","m":"명백한, 명시적인","p":"형용사","ee":"Explicit instructions.","ek":"명시적인 지시.","lv":3,"ln":"수능 핵심"},{"w":"extinction","m":"멸종, 소멸","p":"명사","ee":"Species face extinction.","ek":"종이 멸종 위기에 처하다.","lv":3,"ln":"수능 핵심"},{"w":"extract","m":"추출하다, 발췌","p":"동사/명사","ee":"Extract the juice.","ek":"즙을 추출해라.","lv":3,"ln":"수능 핵심"},{"w":"extravagant","m":"사치스러운, 낭비하는","p":"형용사","ee":"An extravagant lifestyle.","ek":"사치스러운 생활방식.","lv":3,"ln":"수능 핵심"},{"w":"fabricate","m":"조작하다, 날조하다","p":"동사","ee":"He fabricated the story.","ek":"그는 이야기를 날조했다.","lv":3,"ln":"수능 핵심"},{"w":"facilitate","m":"촉진하다, 쉽게 하다","p":"동사","ee":"Technology facilitates learning.","ek":"기술이 학습을 촉진한다.","lv":3,"ln":"수능 핵심"},{"w":"famine","m":"기근","p":"명사","ee":"A severe famine.","ek":"심각한 기근.","lv":3,"ln":"수능 핵심"},{"w":"feasible","m":"실행 가능한","p":"형용사","ee":"A feasible plan.","ek":"실행 가능한 계획.","lv":3,"ln":"수능 핵심"},{"w":"fiscal","m":"재정의","p":"형용사","ee":"Fiscal policy.","ek":"재정 정책.","lv":3,"ln":"수능 핵심"},{"w":"flourish","m":"번성하다, 번영하다","p":"동사","ee":"The business flourished.","ek":"사업이 번성했다.","lv":3,"ln":"수능 핵심"},{"w":"fluctuate","m":"변동하다, 오르내리다","p":"동사","ee":"Prices fluctuate daily.","ek":"가격이 매일 변동한다.","lv":3,"ln":"수능 핵심"},{"w":"foremost","m":"가장 중요한, 첫째의","p":"형용사","ee":"The foremost expert.","ek":"가장 중요한 전문가.","lv":3,"ln":"수능 핵심"},{"w":"formulate","m":"공식화하다, 체계화하다","p":"동사","ee":"Formulate a theory.","ek":"이론을 체계화하다.","lv":3,"ln":"수능 핵심"},{"w":"fossil","m":"화석","p":"명사","ee":"Fossil fuels.","ek":"화석 연료.","lv":3,"ln":"수능 핵심"},{"w":"fragment","m":"조각, 단편","p":"명사","ee":"Fragments of pottery.","ek":"도자기 조각.","lv":3,"ln":"수능 핵심"},{"w":"fraud","m":"사기, 사기꾼","p":"명사","ee":"Insurance fraud.","ek":"보험 사기.","lv":3,"ln":"수능 핵심"},{"w":"friction","m":"마찰","p":"명사","ee":"Friction generates heat.","ek":"마찰은 열을 발생시킨다.","lv":3,"ln":"수능 핵심"},{"w":"fundamental","m":"근본적인, 기본적인","p":"형용사","ee":"A fundamental principle.","ek":"근본적인 원칙.","lv":3,"ln":"수능 핵심"},{"w":"generate","m":"생성하다, 발생시키다","p":"동사","ee":"Generate electricity.","ek":"전기를 생성하다.","lv":3,"ln":"수능 핵심"},{"w":"genuine","m":"진짜의, 진실한","p":"형용사","ee":"A genuine smile.","ek":"진실한 미소.","lv":3,"ln":"수능 핵심"},{"w":"gradual","m":"점진적인","p":"형용사","ee":"A gradual change.","ek":"점진적인 변화.","lv":3,"ln":"수능 핵심"},{"w":"gravity","m":"중력, 심각성","p":"명사","ee":"The gravity of the situation.","ek":"상황의 심각성.","lv":3,"ln":"수능 핵심"},{"w":"grief","m":"슬픔, 비탄","p":"명사","ee":"She was overcome with grief.","ek":"그녀는 슬픔에 잠겼다.","lv":3,"ln":"수능 핵심"},{"w":"grieve","m":"슬퍼하다, 비탄하다","p":"동사","ee":"She grieved the loss.","ek":"그녀는 상실을 슬퍼했다.","lv":3,"ln":"수능 핵심"},{"w":"halt","m":"멈추다, 중단","p":"동사/명사","ee":"Halt all activities.","ek":"모든 활동을 중단해라.","lv":3,"ln":"수능 핵심"},{"w":"hamper","m":"방해하다","p":"동사","ee":"Bad weather hampered the rescue.","ek":"악천후가 구조를 방해했다.","lv":3,"ln":"수능 핵심"},{"w":"harbor","m":"항구, 품다","p":"명사/동사","ee":"Harbor doubts.","ek":"의혹을 품다.","lv":3,"ln":"수능 핵심"},{"w":"hierarchy","m":"계층, 서열","p":"명사","ee":"The social hierarchy.","ek":"사회적 계층.","lv":3,"ln":"수능 핵심"},{"w":"hypothesis","m":"가설","p":"명사","ee":"Test the hypothesis.","ek":"가설을 검증해라.","lv":3,"ln":"수능 핵심"},{"w":"ideology","m":"이념, 이데올로기","p":"명사","ee":"Political ideology.","ek":"정치적 이념.","lv":3,"ln":"수능 핵심"},{"w":"illuminate","m":"비추다, 밝히다","p":"동사","ee":"The study illuminated the issue.","ek":"연구가 문제를 밝혔다.","lv":3,"ln":"수능 핵심"},{"w":"illusion","m":"환각, 착각","p":"명사","ee":"An optical illusion.","ek":"착시 현상.","lv":3,"ln":"수능 핵심"},{"w":"immense","m":"거대한, 막대한","p":"형용사","ee":"An immense challenge.","ek":"거대한 도전.","lv":3,"ln":"수능 핵심"},{"w":"immigrate","m":"이민 오다","p":"동사","ee":"They immigrated to Canada.","ek":"그들은 캐나다로 이민 왔다.","lv":3,"ln":"수능 핵심"},{"w":"immune","m":"면역의, 영향받지 않는","p":"형용사","ee":"Immune to the disease.","ek":"그 질병에 면역인.","lv":3,"ln":"수능 핵심"},{"w":"impact","m":"영향, 충격","p":"명사/동사","ee":"The impact of climate change.","ek":"기후 변화의 영향.","lv":3,"ln":"수능 핵심"},{"w":"impair","m":"손상시키다","p":"동사","ee":"Alcohol impairs judgment.","ek":"술은 판단력을 손상시킨다.","lv":3,"ln":"수능 핵심"},{"w":"implement","m":"실행하다, 도구","p":"동사/명사","ee":"Implement the plan.","ek":"계획을 실행해라.","lv":3,"ln":"수능 핵심"},{"w":"implication","m":"함축, 영향","p":"명사","ee":"The implications are serious.","ek":"함축된 의미가 심각하다.","lv":3,"ln":"수능 핵심"},{"w":"implicit","m":"암묵적인, 함축적인","p":"형용사","ee":"An implicit agreement.","ek":"암묵적 합의.","lv":3,"ln":"수능 핵심"},{"w":"impose","m":"부과하다, 강요하다","p":"동사","ee":"Impose a fine.","ek":"벌금을 부과하다.","lv":3,"ln":"수능 핵심"},{"w":"impulse","m":"충동, 자극","p":"명사","ee":"Act on impulse.","ek":"충동적으로 행동하다.","lv":3,"ln":"수능 핵심"},{"w":"inaugurate","m":"취임시키다, 개시하다","p":"동사","ee":"The president was inaugurated.","ek":"대통령이 취임했다.","lv":3,"ln":"수능 핵심"},{"w":"incline","m":"기울다, 경향이 있다","p":"동사","ee":"I'm inclined to agree.","ek":"동의하는 쪽으로 기운다.","lv":3,"ln":"수능 핵심"},{"w":"incorporate","m":"포함시키다, 통합하다","p":"동사","ee":"Incorporate feedback.","ek":"피드백을 포함시켜라.","lv":3,"ln":"수능 핵심"},{"w":"indigenous","m":"토착의, 원주민의","p":"형용사","ee":"Indigenous people.","ek":"원주민.","lv":3,"ln":"수능 핵심"},{"w":"inevitable","m":"불가피한, 필연적인","p":"형용사","ee":"Change is inevitable.","ek":"변화는 불가피하다.","lv":3,"ln":"수능 핵심"},{"w":"inferior","m":"열등한, 하위의","p":"형용사","ee":"An inferior product.","ek":"열등한 제품.","lv":3,"ln":"수능 핵심"},{"w":"inflate","m":"부풀리다, 인플레이션을 일으키다","p":"동사","ee":"Prices were inflated.","ek":"물가가 부풀려졌다.","lv":3,"ln":"수능 핵심"},{"w":"infrastructure","m":"기반시설","p":"명사","ee":"Improve the infrastructure.","ek":"기반시설을 개선해라.","lv":3,"ln":"수능 핵심"},{"w":"inherent","m":"고유한, 내재된","p":"형용사","ee":"An inherent risk.","ek":"내재된 위험.","lv":3,"ln":"수능 핵심"},{"w":"inhibit","m":"억제하다, 방해하다","p":"동사","ee":"Fear inhibits action.","ek":"두려움이 행동을 억제한다.","lv":3,"ln":"수능 핵심"},{"w":"initiate","m":"시작하다, 착수하다","p":"동사","ee":"Initiate the process.","ek":"과정을 시작해라.","lv":3,"ln":"수능 핵심"},{"w":"innovate","m":"혁신하다","p":"동사","ee":"Companies must innovate.","ek":"기업은 혁신해야 한다.","lv":3,"ln":"수능 핵심"},{"w":"insight","m":"통찰력, 이해","p":"명사","ee":"Gain insight into the problem.","ek":"문제에 대한 통찰을 얻다.","lv":3,"ln":"수능 핵심"},{"w":"instinct","m":"본능","p":"명사","ee":"Trust your instinct.","ek":"본능을 믿어라.","lv":3,"ln":"수능 핵심"},{"w":"integrate","m":"통합하다","p":"동사","ee":"Integrate the systems.","ek":"시스템을 통합해라.","lv":3,"ln":"수능 핵심"},{"w":"integrity","m":"진실성, 완전성","p":"명사","ee":"A person of integrity.","ek":"진실성 있는 사람.","lv":3,"ln":"수능 핵심"},{"w":"intellectual","m":"지적인, 지식인","p":"형용사/명사","ee":"An intellectual discussion.","ek":"지적인 토론.","lv":3,"ln":"수능 핵심"},{"w":"intensify","m":"강화하다, 심화시키다","p":"동사","ee":"The storm intensified.","ek":"폭풍이 심해졌다.","lv":3,"ln":"수능 핵심"},{"w":"intention","m":"의도, 목적","p":"명사","ee":"My intention is to help.","ek":"내 의도는 돕는 것이다.","lv":3,"ln":"수능 핵심"},{"w":"interact","m":"상호작용하다","p":"동사","ee":"People interact daily.","ek":"사람들은 매일 상호작용한다.","lv":3,"ln":"수능 핵심"},{"w":"interpret","m":"해석하다, 통역하다","p":"동사","ee":"Interpret the data.","ek":"데이터를 해석해라.","lv":3,"ln":"수능 핵심"},{"w":"intervene","m":"개입하다, 중재하다","p":"동사","ee":"The police intervened.","ek":"경찰이 개입했다.","lv":3,"ln":"수능 핵심"},{"w":"intimate","m":"친밀한, 내밀한","p":"형용사","ee":"An intimate conversation.","ek":"친밀한 대화.","lv":3,"ln":"수능 핵심"},{"w":"intrinsic","m":"본질적인, 고유의","p":"형용사","ee":"An intrinsic value.","ek":"본질적 가치.","lv":3,"ln":"수능 핵심"},{"w":"intrude","m":"침입하다","p":"동사","ee":"Sorry to intrude.","ek":"방해해서 죄송합니다.","lv":3,"ln":"수능 핵심"},{"w":"intuition","m":"직관, 직감","p":"명사","ee":"Trust your intuition.","ek":"직감을 믿어라.","lv":3,"ln":"수능 핵심"},{"w":"invade","m":"침략하다, 침입하다","p":"동사","ee":"They invaded the country.","ek":"그들은 나라를 침략했다.","lv":3,"ln":"수능 핵심"},{"w":"investigate","m":"조사하다","p":"동사","ee":"The police investigated the case.","ek":"경찰이 사건을 조사했다.","lv":3,"ln":"수능 핵심"},{"w":"invoke","m":"호소하다, 불러일으키다","p":"동사","ee":"Invoke the right to silence.","ek":"묵비권을 행사하다.","lv":3,"ln":"수능 핵심"},{"w":"irony","m":"아이러니, 반어","p":"명사","ee":"The irony of the situation.","ek":"상황의 아이러니.","lv":3,"ln":"수능 핵심"},{"w":"isolate","m":"격리하다, 고립시키다","p":"동사","ee":"Isolate the infected area.","ek":"감염 지역을 격리해라.","lv":3,"ln":"수능 핵심"},{"w":"justify","m":"정당화하다","p":"동사","ee":"He justified his actions.","ek":"그는 행동을 정당화했다.","lv":3,"ln":"수능 핵심"},{"w":"legitimate","m":"합법적인, 정당한","p":"형용사","ee":"A legitimate concern.","ek":"정당한 우려.","lv":3,"ln":"수능 핵심"},{"w":"liable","m":"~하기 쉬운, 책임 있는","p":"형용사","ee":"He is liable for the damage.","ek":"그가 피해에 대해 책임이 있다.","lv":3,"ln":"수능 핵심"},{"w":"linger","m":"오래 머물다, 남다","p":"동사","ee":"The smell lingered.","ek":"냄새가 남아 있었다.","lv":3,"ln":"수능 핵심"},{"w":"literacy","m":"문해력, 읽고 쓰는 능력","p":"명사","ee":"Improve digital literacy.","ek":"디지털 문해력을 향상시켜라.","lv":3,"ln":"수능 핵심"},{"w":"manifest","m":"나타내다, 명백한","p":"동사/형용사","ee":"Her talent manifested early.","ek":"그녀의 재능은 일찍 나타났다.","lv":3,"ln":"수능 핵심"},{"w":"manipulate","m":"조작하다, 조종하다","p":"동사","ee":"Don't manipulate the data.","ek":"데이터를 조작하지 마라.","lv":3,"ln":"수능 핵심"},{"w":"medieval","m":"중세의","p":"형용사","ee":"A medieval castle.","ek":"중세 성.","lv":3,"ln":"수능 핵심"},{"w":"monopoly","m":"독점","p":"명사","ee":"A market monopoly.","ek":"시장 독점.","lv":3,"ln":"수능 핵심"},{"w":"navigate","m":"항해하다, 탐색하다","p":"동사","ee":"Navigate through the city.","ek":"도시를 탐색하다.","lv":3,"ln":"수능 핵심"},{"w":"neglect","m":"무시하다, 방치","p":"동사/명사","ee":"Don't neglect your health.","ek":"건강을 무시하지 마라.","lv":3,"ln":"수능 핵심"},{"w":"negotiate","m":"협상하다","p":"동사","ee":"Negotiate a deal.","ek":"거래를 협상하다.","lv":3,"ln":"수능 핵심"},{"w":"norm","m":"규범, 기준","p":"명사","ee":"Social norms.","ek":"사회적 규범.","lv":3,"ln":"수능 핵심"},{"w":"nurture","m":"양육하다, 기르다","p":"동사","ee":"Nurture talent.","ek":"재능을 기르다.","lv":3,"ln":"수능 핵심"},{"w":"oblige","m":"의무를 지우다","p":"동사","ee":"I'm obliged to help.","ek":"돕도록 의무가 지워졌다.","lv":3,"ln":"수능 핵심"},{"w":"obscure","m":"불분명한, 가리다","p":"형용사/동사","ee":"An obscure reference.","ek":"불분명한 참조.","lv":3,"ln":"수능 핵심"},{"w":"obsolete","m":"구식의, 쓸모없는","p":"형용사","ee":"The technology became obsolete.","ek":"그 기술은 구식이 되었다.","lv":3,"ln":"수능 핵심"},{"w":"offset","m":"상쇄하다","p":"동사","ee":"Gains offset losses.","ek":"이익이 손실을 상쇄했다.","lv":3,"ln":"수능 핵심"},{"w":"oppress","m":"억압하다","p":"동사","ee":"The regime oppressed the people.","ek":"정권이 국민을 억압했다.","lv":3,"ln":"수능 핵심"},{"w":"paradigm","m":"패러다임, 모범","p":"명사","ee":"A paradigm shift.","ek":"패러다임 전환.","lv":3,"ln":"수능 핵심"},{"w":"paradox","m":"역설, 모순","p":"명사","ee":"A paradox of modern life.","ek":"현대 생활의 역설.","lv":3,"ln":"수능 핵심"},{"w":"perceive","m":"인식하다, 감지하다","p":"동사","ee":"How do you perceive the issue?","ek":"그 문제를 어떻게 인식하나?","lv":3,"ln":"수능 핵심"},{"w":"persist","m":"지속하다, 고집하다","p":"동사","ee":"The problem persists.","ek":"문제가 지속된다.","lv":3,"ln":"수능 핵심"},{"w":"perspective","m":"관점, 시각","p":"명사","ee":"From a different perspective.","ek":"다른 관점에서.","lv":3,"ln":"수능 핵심"},{"w":"phenomenon","m":"현상","p":"명사","ee":"A natural phenomenon.","ek":"자연 현상.","lv":3,"ln":"수능 핵심"},{"w":"plausible","m":"그럴듯한","p":"형용사","ee":"A plausible explanation.","ek":"그럴듯한 설명.","lv":3,"ln":"수능 핵심"},{"w":"pledge","m":"서약, 서약하다","p":"명사/동사","ee":"He pledged his support.","ek":"그는 지지를 약속했다.","lv":3,"ln":"수능 핵심"},{"w":"plunge","m":"급락하다, 뛰어들다","p":"동사","ee":"Stock prices plunged.","ek":"주가가 급락했다.","lv":3,"ln":"수능 핵심"},{"w":"prescribe","m":"처방하다, 규정하다","p":"동사","ee":"The doctor prescribed medicine.","ek":"의사가 약을 처방했다.","lv":3,"ln":"수능 핵심"},{"w":"predominant","m":"지배적인, 우세한","p":"형용사","ee":"The predominant opinion.","ek":"지배적인 의견.","lv":3,"ln":"수능 핵심"},{"w":"prejudice","m":"편견, 선입견","p":"명사","ee":"Overcome prejudice.","ek":"편견을 극복해라.","lv":3,"ln":"수능 핵심"},{"w":"preliminary","m":"예비의, 사전의","p":"형용사","ee":"Preliminary results.","ek":"예비 결과.","lv":3,"ln":"수능 핵심"},{"w":"premise","m":"전제, 근거","p":"명사","ee":"Based on the premise that.","ek":"~라는 전제에 근거하여.","lv":3,"ln":"수능 핵심"},{"w":"prevalent","m":"널리 퍼진, 유행하는","p":"형용사","ee":"A prevalent disease.","ek":"널리 퍼진 질병.","lv":3,"ln":"수능 핵심"},{"w":"priority","m":"우선사항","p":"명사","ee":"Safety is our priority.","ek":"안전이 우선이다.","lv":3,"ln":"수능 핵심"},{"w":"privilege","m":"특권","p":"명사","ee":"A great privilege.","ek":"큰 특권.","lv":3,"ln":"수능 핵심"},{"w":"probe","m":"조사하다, 탐사","p":"동사/명사","ee":"Probe the issue.","ek":"문제를 조사하다.","lv":3,"ln":"수능 핵심"},{"w":"profound","m":"심오한, 깊은","p":"형용사","ee":"A profound impact.","ek":"심오한 영향.","lv":3,"ln":"수능 핵심"},{"w":"prohibit","m":"금지하다","p":"동사","ee":"Smoking is prohibited.","ek":"흡연은 금지되어 있다.","lv":3,"ln":"수능 핵심"},{"w":"prominent","m":"유명한, 눈에 띄는","p":"형용사","ee":"A prominent figure.","ek":"유명한 인물.","lv":3,"ln":"수능 핵심"},{"w":"propaganda","m":"선전, 프로파간다","p":"명사","ee":"Political propaganda.","ek":"정치 선전.","lv":3,"ln":"수능 핵심"},{"w":"proportion","m":"비율, 부분","p":"명사","ee":"A large proportion.","ek":"큰 비율.","lv":3,"ln":"수능 핵심"},{"w":"prospect","m":"전망, 가능성","p":"명사","ee":"Job prospects are good.","ek":"취업 전망이 좋다.","lv":3,"ln":"수능 핵심"},{"w":"prosperity","m":"번영, 번성","p":"명사","ee":"Economic prosperity.","ek":"경제적 번영.","lv":3,"ln":"수능 핵심"},{"w":"protest","m":"항의하다, 시위","p":"동사/명사","ee":"They protested the decision.","ek":"그들은 결정에 항의했다.","lv":3,"ln":"수능 핵심"},{"w":"provoke","m":"자극하다, 유발하다","p":"동사","ee":"Don't provoke him.","ek":"그를 자극하지 마라.","lv":3,"ln":"수능 핵심"},{"w":"pursue","m":"추구하다, 뒤쫓다","p":"동사","ee":"Pursue your dreams.","ek":"꿈을 추구해라.","lv":3,"ln":"수능 핵심"},{"w":"radical","m":"급진적인, 근본적인","p":"형용사","ee":"A radical change.","ek":"급진적인 변화.","lv":3,"ln":"수능 핵심"},{"w":"rationale","m":"근거, 이유","p":"명사","ee":"Explain the rationale.","ek":"근거를 설명해라.","lv":3,"ln":"수능 핵심"},{"w":"realm","m":"영역, 왕국","p":"명사","ee":"The realm of science.","ek":"과학의 영역.","lv":3,"ln":"수능 핵심"},{"w":"reconcile","m":"화해시키다, 조정하다","p":"동사","ee":"Reconcile differences.","ek":"차이를 조정하다.","lv":3,"ln":"수능 핵심"},{"w":"reform","m":"개혁, 개혁하다","p":"명사/동사","ee":"Educational reform.","ek":"교육 개혁.","lv":3,"ln":"수능 핵심"},{"w":"regime","m":"정권, 체제","p":"명사","ee":"A totalitarian regime.","ek":"전체주의 정권.","lv":3,"ln":"수능 핵심"},{"w":"reinforce","m":"강화하다, 보강하다","p":"동사","ee":"Reinforce the structure.","ek":"구조를 보강해라.","lv":3,"ln":"수능 핵심"},{"w":"relevant","m":"관련된, 적절한","p":"형용사","ee":"Provide relevant information.","ek":"관련된 정보를 제공해라.","lv":3,"ln":"수능 핵심"},{"w":"reluctant","m":"꺼리는, 마지못한","p":"형용사","ee":"She was reluctant to agree.","ek":"그녀는 동의를 꺼렸다.","lv":3,"ln":"수능 핵심"},{"w":"remedy","m":"치료(법), 구제하다","p":"명사/동사","ee":"A remedy for the problem.","ek":"문제의 해결책.","lv":3,"ln":"수능 핵심"},{"w":"render","m":"만들다, 제공하다","p":"동사","ee":"The news rendered him speechless.","ek":"그 소식이 그를 말문이 막히게 했다.","lv":3,"ln":"수능 핵심"},{"w":"resilient","m":"회복력 있는, 탄력 있는","p":"형용사","ee":"Children are resilient.","ek":"아이들은 회복력이 있다.","lv":3,"ln":"수능 핵심"},{"w":"resolve","m":"해결하다, 결심하다","p":"동사","ee":"Resolve the conflict.","ek":"갈등을 해결해라.","lv":3,"ln":"수능 핵심"},{"w":"restrain","m":"억제하다, 제한하다","p":"동사","ee":"Restrain your anger.","ek":"분노를 억제해라.","lv":3,"ln":"수능 핵심"},{"w":"retrieve","m":"되찾다, 검색하다","p":"동사","ee":"Retrieve the data.","ek":"데이터를 검색해라.","lv":3,"ln":"수능 핵심"},{"w":"reveal","m":"드러내다, 밝히다","p":"동사","ee":"The report revealed the truth.","ek":"보고서가 진실을 밝혔다.","lv":3,"ln":"수능 핵심"},{"w":"revenue","m":"수익, 세입","p":"명사","ee":"Government revenue increased.","ek":"정부 세입이 증가했다.","lv":3,"ln":"수능 핵심"},{"w":"rigid","m":"엄격한, 딱딱한","p":"형용사","ee":"Rigid rules.","ek":"엄격한 규칙.","lv":3,"ln":"수능 핵심"},{"w":"rival","m":"경쟁자, 경쟁하다","p":"명사/동사","ee":"A fierce rival.","ek":"강력한 경쟁자.","lv":3,"ln":"수능 핵심"},{"w":"robust","m":"튼튼한, 강건한","p":"형용사","ee":"A robust economy.","ek":"강건한 경제.","lv":3,"ln":"수능 핵심"},{"w":"sanction","m":"제재, 승인하다","p":"명사/동사","ee":"Economic sanctions.","ek":"경제 제재.","lv":3,"ln":"수능 핵심"},{"w":"scrutiny","m":"정밀 조사, 면밀한 검토","p":"명사","ee":"Under public scrutiny.","ek":"대중의 면밀한 검토 하에.","lv":3,"ln":"수능 핵심"},{"w":"secular","m":"세속적인","p":"형용사","ee":"A secular society.","ek":"세속적인 사회.","lv":3,"ln":"수능 핵심"},{"w":"skeptical","m":"회의적인","p":"형용사","ee":"I'm skeptical about the claim.","ek":"그 주장에 회의적이다.","lv":3,"ln":"수능 핵심"},{"w":"solidarity","m":"연대, 단결","p":"명사","ee":"Show solidarity.","ek":"연대를 보여라.","lv":3,"ln":"수능 핵심"},{"w":"sophisticated","m":"정교한, 세련된","p":"형용사","ee":"A sophisticated approach.","ek":"정교한 접근법.","lv":3,"ln":"수능 핵심"},{"w":"sovereign","m":"주권이 있는, 군주","p":"형용사/명사","ee":"A sovereign nation.","ek":"주권 국가.","lv":3,"ln":"수능 핵심"},{"w":"speculation","m":"추측, 투기","p":"명사","ee":"Pure speculation.","ek":"순수한 추측.","lv":3,"ln":"수능 핵심"},{"w":"stance","m":"입장, 자세","p":"명사","ee":"Take a firm stance.","ek":"단호한 입장을 취해라.","lv":3,"ln":"수능 핵심"},{"w":"statistic","m":"통계, 통계치","p":"명사","ee":"Crime statistics.","ek":"범죄 통계.","lv":3,"ln":"수능 핵심"},{"w":"stimulate","m":"자극하다, 촉진하다","p":"동사","ee":"Stimulate economic growth.","ek":"경제 성장을 촉진하다.","lv":3,"ln":"수능 핵심"},{"w":"strategic","m":"전략적인","p":"형용사","ee":"A strategic plan.","ek":"전략적 계획.","lv":3,"ln":"수능 핵심"},{"w":"subordinate","m":"부하의, 부하 직원","p":"형용사/명사","ee":"A subordinate role.","ek":"하위 역할.","lv":3,"ln":"수능 핵심"},{"w":"subsidy","m":"보조금","p":"명사","ee":"Government subsidies.","ek":"정부 보조금.","lv":3,"ln":"수능 핵심"},{"w":"substitute","m":"대체하다, 대리인","p":"동사/명사","ee":"Sugar substitute.","ek":"설탕 대체물.","lv":3,"ln":"수능 핵심"},{"w":"subtle","m":"미묘한, 섬세한","p":"형용사","ee":"A subtle difference.","ek":"미묘한 차이.","lv":3,"ln":"수능 핵심"},{"w":"superficial","m":"피상적인, 표면적인","p":"형용사","ee":"A superficial analysis.","ek":"피상적인 분석.","lv":3,"ln":"수능 핵심"},{"w":"supplement","m":"보충하다, 보충제","p":"동사/명사","ee":"Supplement your diet.","ek":"식단을 보충해라.","lv":3,"ln":"수능 핵심"},{"w":"suppress","m":"억압하다, 진압하다","p":"동사","ee":"Suppress dissent.","ek":"반대를 억압하다.","lv":3,"ln":"수능 핵심"},{"w":"surge","m":"급등, 급증하다","p":"명사/동사","ee":"A surge in prices.","ek":"물가 급등.","lv":3,"ln":"수능 핵심"},{"w":"surplus","m":"잉여, 과잉","p":"명사","ee":"A trade surplus.","ek":"무역 흑자.","lv":3,"ln":"수능 핵심"},{"w":"surveillance","m":"감시","p":"명사","ee":"Under surveillance.","ek":"감시 하에.","lv":3,"ln":"수능 핵심"},{"w":"sustain","m":"유지하다, 지탱하다","p":"동사","ee":"Sustain economic growth.","ek":"경제 성장을 유지하다.","lv":3,"ln":"수능 핵심"},{"w":"symposium","m":"학술 대회, 심포지엄","p":"명사","ee":"An international symposium.","ek":"국제 학술 대회.","lv":3,"ln":"수능 핵심"},{"w":"synthesis","m":"종합, 합성","p":"명사","ee":"A synthesis of ideas.","ek":"아이디어의 종합.","lv":3,"ln":"수능 핵심"},{"w":"tangible","m":"만질 수 있는, 실질적인","p":"형용사","ee":"Tangible results.","ek":"실질적인 결과.","lv":3,"ln":"수능 핵심"},{"w":"tenure","m":"재직 기간, 종신 재직","p":"명사","ee":"During his tenure.","ek":"그의 재직 기간 동안.","lv":3,"ln":"수능 핵심"},{"w":"territory","m":"영토, 영역","p":"명사","ee":"Uncharted territory.","ek":"미지의 영역.","lv":3,"ln":"수능 핵심"},{"w":"testimony","m":"증언, 증거","p":"명사","ee":"Give testimony in court.","ek":"법정에서 증언하다.","lv":3,"ln":"수능 핵심"},{"w":"threshold","m":"문턱, 한계점","p":"명사","ee":"A pain threshold.","ek":"통증 한계점.","lv":3,"ln":"수능 핵심"},{"w":"thrive","m":"번성하다, 잘 자라다","p":"동사","ee":"The business thrived.","ek":"사업이 번성했다.","lv":3,"ln":"수능 핵심"},{"w":"trait","m":"특성, 특질","p":"명사","ee":"A personality trait.","ek":"성격 특성.","lv":3,"ln":"수능 핵심"},{"w":"trigger","m":"촉발하다, 방아쇠","p":"동사/명사","ee":"It triggered a debate.","ek":"그것이 토론을 촉발했다.","lv":3,"ln":"수능 핵심"},{"w":"trivial","m":"사소한, 하찮은","p":"형용사","ee":"A trivial matter.","ek":"사소한 문제.","lv":3,"ln":"수능 핵심"},{"w":"turbulent","m":"격동의, 난류의","p":"형용사","ee":"A turbulent period.","ek":"격동의 시기.","lv":3,"ln":"수능 핵심"},{"w":"undermine","m":"약화시키다, 훼손하다","p":"동사","ee":"Undermine authority.","ek":"권위를 약화시키다.","lv":3,"ln":"수능 핵심"},{"w":"undertake","m":"착수하다, 떠맡다","p":"동사","ee":"Undertake a project.","ek":"프로젝트에 착수하다.","lv":3,"ln":"수능 핵심"},{"w":"unprecedented","m":"전례 없는","p":"형용사","ee":"An unprecedented event.","ek":"전례 없는 사건.","lv":3,"ln":"수능 핵심"},{"w":"utilize","m":"활용하다","p":"동사","ee":"Utilize all resources.","ek":"모든 자원을 활용해라.","lv":3,"ln":"수능 핵심"},{"w":"validate","m":"확인하다, 입증하다","p":"동사","ee":"Validate the results.","ek":"결과를 입증해라.","lv":3,"ln":"수능 핵심"},{"w":"versatile","m":"다재다능한","p":"형용사","ee":"A versatile player.","ek":"다재다능한 선수.","lv":3,"ln":"수능 핵심"},{"w":"viable","m":"실행 가능한, 생존 가능한","p":"형용사","ee":"A viable option.","ek":"실행 가능한 선택.","lv":3,"ln":"수능 핵심"},{"w":"vigorous","m":"활기찬, 정력적인","p":"형용사","ee":"Vigorous exercise.","ek":"격렬한 운동.","lv":3,"ln":"수능 핵심"},{"w":"virtue","m":"미덕, 덕목","p":"명사","ee":"Patience is a virtue.","ek":"인내는 미덕이다.","lv":3,"ln":"수능 핵심"},{"w":"vulnerable","m":"취약한","p":"형용사","ee":"Vulnerable to attack.","ek":"공격에 취약한.","lv":3,"ln":"수능 핵심"},{"w":"welfare","m":"복지, 행복","p":"명사","ee":"Social welfare.","ek":"사회 복지.","lv":3,"ln":"수능 핵심"},{"w":"withdraw","m":"철수하다, 인출하다","p":"동사","ee":"Withdraw the troops.","ek":"군대를 철수시켜라.","lv":3,"ln":"수능 핵심"},{"w":"withstand","m":"견디다, 저항하다","p":"동사","ee":"Withstand pressure.","ek":"압력을 견디다.","lv":3,"ln":"수능 핵심"},{"w":"yield","m":"산출하다, 양보하다, 수익","p":"동사/명사","ee":"The farm yielded crops.","ek":"농장이 작물을 산출했다.","lv":3,"ln":"수능 핵심"}]
+;
+
+let state = {
+  levels: [1,2,3],
+  mode: '4choice',
+  count: 20,
+  questions: [],
+  current: 0,
+  score: 0,
+  wrongs: [],
+  answered: false
+};
+
+// Setup interactions
+document.querySelectorAll('#levelChips .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    c.classList.toggle('active');
+    state.levels = [...document.querySelectorAll('#levelChips .chip.active')].map(e => +e.dataset.lv);
+    updateStartBtn();
+  });
+});
+
+document.querySelectorAll('#modeCards .mode-card').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('#modeCards .mode-card').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    state.mode = c.dataset.mode;
+  });
+});
+
+function changeCount(d) {
+  state.count = Math.max(5, Math.min(672, state.count + d));
+  document.getElementById('numDisplay').textContent = state.count;
+}
+function setCount(n) {
+  if (n === 0) {
+    const pool = VOCAB.filter(w => state.levels.includes(w.lv));
+    state.count = pool.length || 20;
+  } else {
+    state.count = n;
+  }
+  document.getElementById('numDisplay').textContent = state.count;
+}
+function updateStartBtn() {
+  document.getElementById('btnStart').disabled = state.levels.length === 0;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  const pool = VOCAB.filter(w => state.levels.includes(w.lv));
+  if (pool.length === 0) return;
+  state.questions = shuffle(pool).slice(0, Math.min(state.count, pool.length));
+  state.current = 0;
+  state.score = 0;
+  state.wrongs = [];
+  state.answered = false;
+
+  document.getElementById('screen-setup').style.display = 'none';
+  document.getElementById('screen-quiz').style.display = 'block';
+  document.getElementById('screen-result').style.display = 'none';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = state.questions[state.current];
+  const total = state.questions.length;
+  state.answered = false;
+
+  document.getElementById('qNum').textContent = `${state.current + 1} / ${total}`;
+  document.getElementById('qScore').textContent = `맞힌 수: ${state.score}`;
+  document.getElementById('progressFill').style.width = `${(state.current / total) * 100}%`;
+
+  const content = document.getElementById('quizContent');
+
+  if (state.mode === '4choice') {
+    render4Choice(q, content, false);
+  } else if (state.mode === '4choice-rev') {
+    render4Choice(q, content, true);
+  } else if (state.mode === 'typing') {
+    renderTyping(q, content);
+  } else if (state.mode === 'flash') {
+    renderFlashcard(q, content);
+  }
+}
+
+function getDistractors(correct, count, reverse) {
+  const pool = VOCAB.filter(w => w.w !== correct.w);
+  const shuffled = shuffle(pool);
+  return shuffled.slice(0, count);
+}
+
+function render4Choice(q, el, reverse) {
+  const distractors = getDistractors(q, 3, reverse);
+  const options = shuffle([q, ...distractors]);
+
+  el.innerHTML = `
+    <div class="quiz-card fade-in">
+      <div class="quiz-label">${q.ln} · ${q.p}</div>
+      ${reverse 
+        ? `<div class="quiz-word" style="font-family:'Noto Sans KR',sans-serif;font-size:1.5rem">${q.m}</div>`
+        : `<div class="quiz-word">${q.w}</div>`
+      }
+      <div class="quiz-hint" id="hintBtn" onclick="revealHint()">💡 힌트 보기 (예문)</div>
+      <div class="choices" id="choices">
+        ${options.map((o, i) => `
+          <button class="choice" data-idx="${i}" data-word="${o.w}" onclick="choose4(this,'${escape4(q.w)}',${reverse})">
+            ${reverse ? o.w : o.m}
+          </button>
+        `).join('')}
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <button class="btn-next" id="btnNext" style="display:none" onclick="nextQuestion()">다음 →</button>
+    </div>
+  `;
+}
+
+function escape4(s) { return s.replace(/'/g, "\\'"); }
+
+function revealHint() {
+  const q = state.questions[state.current];
+  const btn = document.getElementById('hintBtn');
+  btn.textContent = `📖 ${q.ee}`;
+  btn.classList.add('revealed');
+}
+
+function choose4(btn, correctWord, reverse) {
+  if (state.answered) return;
+  state.answered = true;
+
+  const q = state.questions[state.current];
+  const isCorrect = btn.dataset.word === correctWord;
+
+  document.querySelectorAll('.choice').forEach(c => {
+    c.classList.add('disabled');
+    if (c.dataset.word === correctWord) c.classList.add(isCorrect && c === btn ? 'correct' : 'show-correct');
+  });
+  if (!isCorrect) btn.classList.add('wrong');
+
+  const fb = document.getElementById('feedback');
+  if (isCorrect) {
+    state.score++;
+    fb.className = 'feedback show correct-fb';
+    fb.innerHTML = `<strong>정답! 🎉</strong><div class="example-text">${q.ee}<br>${q.ek}</div>`;
+  } else {
+    state.wrongs.push(q);
+    fb.className = 'feedback show wrong-fb';
+    fb.innerHTML = `<strong>오답 😢</strong> 정답: <strong>${q.w}</strong> — ${q.m}<div class="example-text">${q.ee}<br>${q.ek}</div>`;
+  }
+  document.getElementById('qScore').textContent = `맞힌 수: ${state.score}`;
+  document.getElementById('btnNext').style.display = 'block';
+}
+
+function renderTyping(q, el) {
+  el.innerHTML = `
+    <div class="quiz-card fade-in">
+      <div class="quiz-label">${q.ln} · ${q.p}</div>
+      <div class="quiz-word" style="font-family:'Noto Sans KR',sans-serif;font-size:1.5rem">${q.m}</div>
+      <div class="quiz-hint" id="hintBtn" onclick="revealHint()">💡 힌트 보기 (예문)</div>
+      <div class="input-wrap">
+        <input type="text" id="typingInput" placeholder="영단어를 입력하세요" autocomplete="off" autocapitalize="off" onkeydown="if(event.key==='Enter')checkTyping()">
+        <button class="btn-submit" onclick="checkTyping()">확인</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <button class="btn-next" id="btnNext" style="display:none" onclick="nextQuestion()">다음 →</button>
+    </div>
+  `;
+  setTimeout(() => document.getElementById('typingInput')?.focus(), 100);
+}
+
+function checkTyping() {
+  if (state.answered) return;
+  state.answered = true;
+  const q = state.questions[state.current];
+  const input = document.getElementById('typingInput');
+  const answer = input.value.trim().toLowerCase();
+  const correct = q.w.toLowerCase();
+  const isCorrect = answer === correct;
+
+  const fb = document.getElementById('feedback');
+  if (isCorrect) {
+    state.score++;
+    input.classList.add('correct-input');
+    fb.className = 'feedback show correct-fb';
+    fb.innerHTML = `<strong>정답! 🎉</strong><div class="example-text">${q.ee}<br>${q.ek}</div>`;
+  } else {
+    state.wrongs.push(q);
+    input.classList.add('wrong-input');
+    fb.className = 'feedback show wrong-fb';
+    fb.innerHTML = `<strong>오답 😢</strong> 정답: <strong>${q.w}</strong><div class="example-text">${q.ee}<br>${q.ek}</div>`;
+  }
+  document.getElementById('qScore').textContent = `맞힌 수: ${state.score}`;
+  document.getElementById('btnNext').style.display = 'block';
+}
+
+function renderFlashcard(q, el) {
+  el.innerHTML = `
+    <div class="quiz-card fade-in">
+      <div class="quiz-label">${q.ln} · ${q.p}</div>
+      <div class="flashcard" id="flashcard" onclick="this.classList.toggle('flipped')">
+        <div class="flashcard-inner">
+          <div class="flashcard-front">
+            <div class="big">${q.w}</div>
+            <div class="sub">클릭하여 뒤집기</div>
+          </div>
+          <div class="flashcard-back">
+            <div class="meaning">${q.m}</div>
+            <div class="example">${q.ee}<br><span style="color:var(--text3)">${q.ek}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="flip-hint">카드를 클릭하면 뜻이 보입니다</div>
+      <div class="flash-btns">
+        <button class="flash-btn dunno" onclick="flashAnswer(false)">모름 ✗</button>
+        <button class="flash-btn skip" onclick="flashAnswer(null)">넘기기</button>
+        <button class="flash-btn know" onclick="flashAnswer(true)">알고있음 ✓</button>
+      </div>
+    </div>
+  `;
+}
+
+function flashAnswer(know) {
+  if (state.answered) return;
+  state.answered = true;
+  const q = state.questions[state.current];
+  if (know === true) {
+    state.score++;
+  } else if (know === false) {
+    state.wrongs.push(q);
+  }
+  document.getElementById('qScore').textContent = `맞힌 수: ${state.score}`;
+  nextQuestion();
+}
+
+function nextQuestion() {
+  state.current++;
+  if (state.current >= state.questions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('screen-quiz').style.display = 'none';
+  const el = document.getElementById('screen-result');
+  el.style.display = 'block';
+
+  const total = state.questions.length;
+  const pct = Math.round((state.score / total) * 100);
+  const circumference = 2 * Math.PI * 72;
+  const offset = circumference - (pct / 100) * circumference;
+  const color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  const msg = pct >= 90 ? '완벽해요! 🏆' : pct >= 70 ? '잘했어요! 👏' : pct >= 50 ? '조금 더 힘내요! 💪' : '복습이 필요해요 📖';
+
+  el.innerHTML = `
+    <div class="result fade-in">
+      <div class="result-circle">
+        <svg width="164" height="164" viewBox="0 0 164 164">
+          <circle cx="82" cy="82" r="72" stroke="${color}" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}" style="transition:stroke-dashoffset 1.5s ease" />
+        </svg>
+        <div class="result-score" style="color:${color}">${pct}%</div>
+        <div class="result-total">${state.score} / ${total}</div>
+      </div>
+      <h2>${msg}</h2>
+      <div class="result-stats">
+        <div class="stat-card"><div class="stat-val stat-green">${state.score}</div><div class="stat-label">정답</div></div>
+        <div class="stat-card"><div class="stat-val stat-red">${state.wrongs.length}</div><div class="stat-label">오답</div></div>
+        <div class="stat-card"><div class="stat-val stat-orange">${total - state.score - state.wrongs.length}</div><div class="stat-label">건너뜀</div></div>
+      </div>
+      ${state.wrongs.length > 0 ? `
+        <div class="wrong-list">
+          <h3>틀린 단어 복습 📝</h3>
+          ${state.wrongs.map(w => `
+            <div class="wrong-item">
+              <div><span class="wi-word">${w.w}</span></div>
+              <div class="wi-meaning">${w.m}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${state.wrongs.length > 0 ? `<button class="btn-restart" style="background:var(--red);margin-top:16px" onclick="retryWrongs()">틀린 단어만 다시 풀기</button>` : ''}
+      <button class="btn-restart" onclick="goHome()">처음으로 돌아가기</button>
+    </div>
+  `;
+
+  // Animate circle
+  setTimeout(() => {
+    el.querySelector('svg circle').style.strokeDashoffset = offset;
+  }, 100);
+}
+
+function retryWrongs() {
+  state.questions = shuffle(state.wrongs);
+  state.current = 0;
+  state.score = 0;
+  state.wrongs = [];
+  document.getElementById('screen-result').style.display = 'none';
+  document.getElementById('screen-quiz').style.display = 'block';
+  renderQuestion();
+}
+
+function goHome() {
+  document.getElementById('screen-result').style.display = 'none';
+  document.getElementById('screen-quiz').style.display = 'none';
+  document.getElementById('screen-setup').style.display = 'block';
+}
+</script>
+</body>
+</html>
