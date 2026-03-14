@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>트레이더의 인지 편향 가이드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0C0B0F;
+    --bg2: #141318;
+    --bg3: #1C1B22;
+    --text: #E8E6F0;
+    --text-dim: #9895A8;
+    --text-hint: #5D5A6E;
+    --coral: #E8593C;
+    --coral-dim: #3A1A12;
+    --purple: #8B7FE8;
+    --purple-dim: #1E1A3A;
+    --teal: #3DBFA0;
+    --teal-dim: #0E2E26;
+    --amber: #E8A830;
+    --amber-dim: #3A2A0E;
+    --accent-line: rgba(139,127,232,0.12);
+    --card-border: rgba(255,255,255,0.06);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  .grain {
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 128px;
+  }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 24px;
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(139,127,232,0.08) 0%, transparent 70%);
+    top: 10%; left: 50%; transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--purple);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+
+  .hero h1 {
+    font-weight: 900;
+    font-size: clamp(36px, 6vw, 72px);
+    line-height: 1.15;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.4s;
+  }
+
+  .hero h1 span { color: var(--coral); }
+
+  .hero p {
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 520px;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.6s;
+  }
+
+  .scroll-hint {
+    margin-top: 60px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-hint);
+    letter-spacing: 2px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.8s;
+  }
+
+  .scroll-hint::after {
+    content: '';
+    display: block;
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--text-hint), transparent);
+    margin: 12px auto 0;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* Category sections */
+  .categories {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  .category {
+    margin-bottom: 100px;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .category.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .cat-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .cat-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .cat-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .cat-header p {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 300;
+    margin-top: 4px;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .card[data-color="coral"]::before { background: var(--coral); }
+  .card[data-color="coral"]:hover { border-color: rgba(232,89,60,0.3); }
+  .card[data-color="purple"]::before { background: var(--purple); }
+  .card[data-color="purple"]:hover { border-color: rgba(139,127,232,0.3); }
+  .card[data-color="teal"]::before { background: var(--teal); }
+  .card[data-color="teal"]:hover { border-color: rgba(61,191,160,0.3); }
+  .card[data-color="amber"]::before { background: var(--amber); }
+  .card[data-color="amber"]:hover { border-color: rgba(232,168,48,0.3); }
+
+  .card-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .card[data-color="coral"] .card-icon { background: var(--coral-dim); color: var(--coral); }
+  .card[data-color="purple"] .card-icon { background: var(--purple-dim); color: var(--purple); }
+  .card[data-color="teal"] .card-icon { background: var(--teal-dim); color: var(--teal); }
+  .card[data-color="amber"] .card-icon { background: var(--amber-dim); color: var(--amber); }
+
+  .card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .card .subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .card[data-color="coral"] .subtitle { color: var(--coral); }
+  .card[data-color="purple"] .subtitle { color: var(--purple); }
+  .card[data-color="teal"] .subtitle { color: var(--teal); }
+  .card[data-color="amber"] .subtitle { color: var(--amber); }
+
+  .card p {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .card .example {
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: var(--bg3);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text-dim);
+    border-left: 2px solid;
+  }
+
+  .card[data-color="coral"] .example { border-left-color: var(--coral); }
+  .card[data-color="purple"] .example { border-left-color: var(--purple); }
+  .card[data-color="teal"] .example { border-left-color: var(--teal); }
+  .card[data-color="amber"] .example { border-left-color: var(--amber); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 36px;
+    position: relative;
+    animation: scaleIn 0.3s ease;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: var(--bg3);
+    border: none;
+    color: var(--text-dim);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .modal-close:hover { background: var(--text-hint); color: var(--text); }
+
+  .modal h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .modal .modal-sub { font-size: 14px; margin-bottom: 20px; font-weight: 500; }
+  .modal p { font-size: 15px; color: var(--text-dim); font-weight: 300; margin-bottom: 16px; }
+  .modal .tip-title { font-size: 14px; font-weight: 700; color: var(--text); margin: 20px 0 8px; }
+  .modal .tip { font-size: 14px; color: var(--text-dim); font-weight: 300; padding: 10px 14px; background: var(--bg3); border-radius: 10px; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 60px 24px;
+    border-top: 1px solid var(--card-border);
+    color: var(--text-hint);
+    font-size: 13px;
+    font-weight: 300;
+  }
+
+  footer strong {
+    display: block;
+    font-size: 15px;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .cards { grid-template-columns: 1fr; }
+    .cat-number { font-size: 36px; }
+    .cat-header h2 { font-size: 22px; }
+    .modal { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-tag">Futures trading psychology</div>
+  <h1>트레이더의<br><span>인지 편향</span> 가이드</h1>
+  <p>선물 트레이딩에서 빠질 수 있는 16가지 심리적 함정과 극복 전략</p>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- Categories -->
+<section class="categories">
+
+  <!-- 1. 손실 관련 -->
+  <div class="category" id="cat1">
+    <div class="cat-header">
+      <div>
+        <div class="cat-number" style="color:var(--coral)">01</div>
+      </div>
+      <div>
+        <h2>손실 회피 편향</h2>
+        <p>손실에 대한 공포가 합리적 판단을 마비시킵니다</p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card" data-color="coral" onclick="openModal(this)" data-title="손실 회피" data-sub="Loss Aversion" data-desc="같은 금액이라도 손실의 고통이 이익의 기쁨보다 2~2.5배 강하게 느껴지는 현상입니다. 선물 트레이딩에서는 레버리지로 인해 이 감정이 극대화됩니다." data-tip="진입 전 스톱로스를 반드시 설정하고, 1회 손실 한도를 총 자산의 1~2%로 제한하세요.">
+        <div class="card-icon">LA</div>
+        <h3>손실 회피</h3>
+        <div class="subtitle">이익보다 손실에 민감</div>
+        <p>100만 원 이익의 기쁨보다 100만 원 손실의 고통이 2배 이상 크게 느껴져, 손절을 계속 미루게 됩니다.</p>
+        <div class="example">"조금만 더 기다리면 반등할 거야..." → 손실 확대</div>
+      </div>
+      <div class="card" data-color="coral" onclick="openModal(this)" data-title="처분 효과" data-sub="Disposition Effect" data-desc="수익이 나는 포지션은 빨리 청산하고, 손실 포지션은 오래 보유하는 경향입니다. 이익을 잃을까 봐 조기 익절하고, 손실 확정의 고통을 피하려 버팁니다." data-tip="목표가와 손절가를 사전에 설정하고, 도달 시 기계적으로 실행하세요. 트레일링 스톱을 활용하면 수익을 더 길게 가져갈 수 있습니다.">
+        <div class="card-icon">DE</div>
+        <h3>처분 효과</h3>
+        <div class="subtitle">손실은 보유, 이익은 실현</div>
+        <p>수익 포지션은 +2%에 서둘러 청산하면서, 손실 포지션은 -10%까지 버티는 비대칭적 행동을 합니다.</p>
+        <div class="example">승률 70%인데 총 수익이 마이너스인 계좌</div>
+      </div>
+      <div class="card" data-color="coral" onclick="openModal(this)" data-title="매몰비용 편향" data-sub="Sunk Cost Fallacy" data-desc="이미 투입한 돈, 시간, 노력 때문에 잘못된 포지션을 계속 유지하는 경향입니다. '여기서 나가면 지금까지의 고통이 무의미해진다'는 생각이 합리적 판단을 방해합니다." data-tip="과거에 투입한 비용은 이미 회수 불가능합니다. '지금 이 가격에서 새로 진입할 것인가?'라는 질문으로 프레임을 전환하세요.">
+        <div class="card-icon">SC</div>
+        <h3>매몰비용 편향</h3>
+        <div class="subtitle">이미 투입한 비용에 집착</div>
+        <p>"이미 이만큼 잃었으니 더 버텨야 해"라는 생각으로 손실 포지션을 끝없이 유지합니다.</p>
+        <div class="example">물타기로 평단을 낮추려다 손실 2배 확대</div>
+      </div>
+      <div class="card" data-color="coral" onclick="openModal(this)" data-title="본전 심리" data-sub="Break-Even Effect" data-desc="손실을 본 직후 원금을 회복하려는 강한 충동으로, 평소보다 큰 레버리지나 무리한 포지션을 취하게 됩니다. 감정적 복수 매매의 원인입니다." data-tip="연속 손실 후에는 반드시 트레이딩을 중단하세요. '3연패 규칙' 등을 만들어 쿨다운 시간을 확보하세요.">
+        <div class="card-icon">BE</div>
+        <h3>본전 심리</h3>
+        <div class="subtitle">잃은 돈 되찾으려 무리</div>
+        <p>손실 후 "빨리 본전을 찾아야 해"라는 조급함에 레버리지를 높이고 무리한 진입을 합니다.</p>
+        <div class="example">-5% 손실 → 레버리지 2배로 올림 → -15% 추가 손실</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 판단 왜곡 -->
+  <div class="category" id="cat2">
+    <div class="cat-header">
+      <div>
+        <div class="cat-number" style="color:var(--purple)">02</div>
+      </div>
+      <div>
+        <h2>판단 왜곡 편향</h2>
+        <p>정보 처리 과정에서 체계적 오류가 발생합니다</p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card" data-color="purple" onclick="openModal(this)" data-title="확증 편향" data-sub="Confirmation Bias" data-desc="자신의 기존 믿음을 지지하는 정보만 선택적으로 수용하고, 반대 정보는 무시하거나 과소평가하는 경향입니다. 롱 포지션을 잡으면 상승 뉴스만 보이게 됩니다." data-tip="일부러 반대 의견을 찾아보세요. '내 포지션이 틀렸다면 어떤 근거가 있을까?'를 매일 자문하세요.">
+        <div class="card-icon">CB</div>
+        <h3>확증 편향</h3>
+        <div class="subtitle">내 의견만 지지하는 정보</div>
+        <p>롱 포지션을 잡은 후 상승 근거만 찾고, 하락 신호는 무의식적으로 무시합니다.</p>
+        <div class="example">차트에서 골든크로스만 보이고 데드크로스는 안 보임</div>
+      </div>
+      <div class="card" data-color="purple" onclick="openModal(this)" data-title="앵커링 효과" data-sub="Anchoring Effect" data-desc="처음 접한 가격이나 정보에 과도하게 고정되어, 이후 판단이 그 기준점에 끌려가는 현상입니다. 매수가, 전고점, 특정 지지선 등이 앵커가 됩니다." data-tip="매수 가격이 아닌 현재 시장 상황에 기반해 판단하세요. '지금 처음 이 차트를 본다면 어떻게 하겠는가?'">
+        <div class="card-icon">AN</div>
+        <h3>앵커링 효과</h3>
+        <div class="subtitle">첫 정보에 과도하게 고정</div>
+        <p>"내 매수가가 50,000이니까 여기까진 다시 올 거야"라며 의미 없는 기준점에 집착합니다.</p>
+        <div class="example">전고점에 집착해 이미 변한 시장을 인식하지 못함</div>
+      </div>
+      <div class="card" data-color="purple" onclick="openModal(this)" data-title="과신 편향" data-sub="Overconfidence Bias" data-desc="자신의 분석 능력, 시장 예측력을 실제보다 과대평가하는 경향입니다. 연속 수익 후 특히 강해지며, 리스크 관리를 소홀히 하게 만듭니다." data-tip="모든 거래의 승률과 손익비를 기록하세요. 데이터로 보면 자신의 실제 능력을 객관적으로 파악할 수 있습니다.">
+        <div class="card-icon">OC</div>
+        <h3>과신 편향</h3>
+        <div class="subtitle">내 분석 능력을 과대평가</div>
+        <p>3연승 후 "나는 시장을 읽을 수 있어"라는 착각에 포지션 사이즈를 무리하게 키웁니다.</p>
+        <div class="example">리스크 관리 무시 → 한 번의 큰 손실로 전체 수익 증발</div>
+      </div>
+      <div class="card" data-color="purple" onclick="openModal(this)" data-title="후견 편향" data-sub="Hindsight Bias" data-desc="이미 발생한 결과를 '나는 알고 있었어'라고 착각하는 경향입니다. 과거 차트를 보면 매수·매도 타이밍이 명확해 보이지만, 실시간에서는 전혀 다릅니다." data-tip="트레이딩 일지에 진입 '전' 예측과 근거를 기록하세요. 사후에 비교하면 예측 정확도의 현실을 직시할 수 있습니다.">
+        <div class="card-icon">HB</div>
+        <h3>후견 편향</h3>
+        <div class="subtitle">결과를 알았다고 착각</div>
+        <p>"그때 숏 쳤어야 했는데, 나도 느낌은 있었어"라며 과거 결과를 예측 가능했다고 왜곡합니다.</p>
+        <div class="example">차트 복기 시 "여기서 들어갔으면..."이 반복됨</div>
+      </div>
+      <div class="card" data-color="purple" onclick="openModal(this)" data-title="가용성 편향" data-sub="Availability Bias" data-desc="최근 경험하거나 쉽게 떠오르는 정보에 과도한 비중을 두는 경향입니다. 최근 급등을 목격하면 상승 확률을 과대평가하게 됩니다." data-tip="통계적 데이터에 기반해 판단하세요. '인상적인 사례'가 아니라 '전체 데이터'를 기준으로 삼으세요.">
+        <div class="card-icon">AB</div>
+        <h3>가용성 편향</h3>
+        <div class="subtitle">쉽게 떠오르는 정보에 의존</div>
+        <p>어제 본 급등 뉴스 때문에 오늘도 비슷한 급등이 일어날 것이라고 과대평가합니다.</p>
+        <div class="example">SNS에서 본 수익 인증에 영향받아 무리한 진입</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 군중 심리 -->
+  <div class="category" id="cat3">
+    <div class="cat-header">
+      <div>
+        <div class="cat-number" style="color:var(--teal)">03</div>
+      </div>
+      <div>
+        <h2>군중 심리 편향</h2>
+        <p>다수의 행동이 개인의 판단을 압도합니다</p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card" data-color="teal" onclick="openModal(this)" data-title="FOMO" data-sub="Fear Of Missing Out" data-desc="다른 사람들이 수익을 내는 것을 보면서 '나만 놓치고 있다'는 공포에 사로잡히는 현상입니다. 이미 충분히 오른 가격에 레버리지를 걸고 추격매수하게 만듭니다." data-tip="기회는 항상 옵니다. '이 기회를 놓치면 끝'이라는 생각 자체가 FOMO입니다. 진입 체크리스트를 만들고, 조건이 충족될 때만 진입하세요.">
+        <div class="card-icon">FM</div>
+        <h3>FOMO</h3>
+        <div class="subtitle">놓칠까 두려워 추격매수</div>
+        <p>"다들 수익 내고 있는데 나만 못 타고 있어!" → 고점에서 레버리지 진입 → 청산</p>
+        <div class="example">커뮤니티 수익 인증 보고 뒤늦게 10배 레버리지 진입</div>
+      </div>
+      <div class="card" data-color="teal" onclick="openModal(this)" data-title="밴드왜건 효과" data-sub="Bandwagon Effect" data-desc="많은 사람들이 같은 방향으로 매매하면 그 자체가 신뢰 신호로 작용하여 따라가게 되는 현상입니다. '다수가 맞겠지'라는 착각이 원인입니다." data-tip="군중과 같은 방향일 때 오히려 경계하세요. 극단적 공포/탐욕 구간에서 군중의 반대편이 수익 기회인 경우가 많습니다.">
+        <div class="card-icon">BW</div>
+        <h3>밴드왜건 효과</h3>
+        <div class="subtitle">다수가 하면 따라감</div>
+        <p>커뮤니티에서 "롱 풀매수" 분위기가 형성되면 분석 없이 따라서 롱 포지션을 잡습니다.</p>
+        <div class="example">"다들 롱이래" → 전원 롱 → 세력의 숏 스퀴즈 먹잇감</div>
+      </div>
+      <div class="card" data-color="teal" onclick="openModal(this)" data-title="권위 편향" data-sub="Authority Bias" data-desc="유명 트레이더, 애널리스트, 인플루언서의 의견을 비판 없이 수용하는 경향입니다. 그들도 틀릴 수 있고, 이해관계가 다를 수 있습니다." data-tip="어떤 전문가의 의견이든 반드시 자신의 분석으로 검증하세요. '왜 이렇게 말하는가?'와 '이 사람의 이해관계는?'을 먼저 질문하세요.">
+        <div class="card-icon">AU</div>
+        <h3>권위 편향</h3>
+        <div class="subtitle">유명인 의견을 맹신</div>
+        <p>"유명 트레이더가 비트코인 10만 달러 간다고 했으니까"라며 자체 분석 없이 진입합니다.</p>
+        <div class="example">인플루언서 추천 → 매수 → 그 사람은 이미 익절 완료</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 자기 통제 -->
+  <div class="category" id="cat4">
+    <div class="cat-header">
+      <div>
+        <div class="cat-number" style="color:var(--amber)">04</div>
+      </div>
+      <div>
+        <h2>자기 통제 편향</h2>
+        <p>트레이딩 규칙과 시스템을 무력화시킵니다</p>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card" data-color="amber" onclick="openModal(this)" data-title="최근성 편향" data-sub="Recency Bias" data-desc="가장 최근의 경험에 과도한 비중을 두어, 장기적 패턴이나 통계적 확률을 무시하는 경향입니다. 최근 3일 연속 상승했다고 내일도 상승할 것이라 예단합니다." data-tip="충분한 샘플 사이즈의 백테스트 결과를 신뢰하세요. 최근 몇 건의 거래보다 100건 이상의 데이터가 더 신뢰할 만합니다.">
+        <div class="card-icon">RB</div>
+        <h3>최근성 편향</h3>
+        <div class="subtitle">최근 경험에 과도한 비중</div>
+        <p>최근 3번 연속 롱으로 수익 → "롱만 하면 되는구나" → 시장 전환 시 대형 손실</p>
+        <div class="example">상승장 기억만 남아 하락장 전환을 인지하지 못함</div>
+      </div>
+      <div class="card" data-color="amber" onclick="openModal(this)" data-title="도박사의 오류" data-sub="Gambler's Fallacy" data-desc="독립적인 사건들 사이에 패턴이 있다고 착각하는 현상입니다. '5번 연속 하락했으니 다음은 반등'이라는 생각은 동전 던지기에서 '앞면이 5번 나왔으니 뒷면 차례'라는 착각과 같습니다." data-tip="각 트레이딩은 독립적 사건입니다. 연속 손실이 다음 수익을 보장하지 않습니다. 항상 현재 시장 조건에 기반해 판단하세요.">
+        <div class="card-icon">GF</div>
+        <h3>도박사의 오류</h3>
+        <div class="subtitle">연속 하락 후 반등 확신</div>
+        <p>"5일 연속 하락했으니 내일은 반드시 오른다!" → 시장은 6일째 하락 가능</p>
+        <div class="example">하락 추세에서 "바닥 잡기" 시도 → 계속 떨어지는 칼날</div>
+      </div>
+      <div class="card" data-color="amber" onclick="openModal(this)" data-title="결과 편향" data-sub="Outcome Bias" data-desc="의사결정의 질을 결과로만 평가하는 경향입니다. 나쁜 전략이라도 우연히 수익이 나면 '좋은 전략'이라 착각하고, 좋은 전략이라도 손실이 나면 버립니다." data-tip="과정을 평가하세요. '규칙을 지켰는가?'가 '수익이 났는가?'보다 중요합니다. 100번의 거래 후 전체 성과로 전략을 판단하세요.">
+        <div class="card-icon">OB</div>
+        <h3>결과 편향</h3>
+        <div class="subtitle">결과로 과정의 질을 판단</div>
+        <p>손절 없이 버텼다가 우연히 반등 → "역시 손절은 필요 없어!" → 다음번 계좌 청산</p>
+        <div class="example">잘못된 전략으로 얻은 수익이 올바른 전략을 폐기시킴</div>
+      </div>
+      <div class="card" data-color="amber" onclick="openModal(this)" data-title="현상유지 편향" data-sub="Status Quo Bias" data-desc="현재 상태를 유지하려는 심리적 관성입니다. 시장 상황이 변했는데도 기존 포지션이나 전략을 고수합니다. 변화에 따른 후회를 피하려는 심리가 원인입니다." data-tip="정기적으로 포지션을 재평가하세요. '지금 현금이라면 이 포지션에 새로 진입할 것인가?'로 자문하세요.">
+        <div class="card-icon">SQ</div>
+        <h3>현상유지 편향</h3>
+        <div class="subtitle">변화를 거부, 포지션 유지</div>
+        <p>시장 환경이 완전히 바뀌었는데도 "원래 하던 대로" 같은 전략을 고수합니다.</p>
+        <div class="example">상승장 전략을 하락장에서도 그대로 적용 → 연속 손실</div>
+      </div>
+      <div class="card" data-color="amber" onclick="openModal(this)" data-title="통제 환상" data-sub="Illusion of Control" data-desc="시장이라는 통제 불가능한 대상을 자신이 통제할 수 있다고 믿는 착각입니다. 복잡한 지표를 많이 쓸수록, 분석 시간을 많이 쓸수록 이 착각은 강해집니다." data-tip="시장의 불확실성을 인정하세요. 통제할 수 있는 것(진입, 손절, 포지션 사이즈)에만 집중하고, 가격의 방향은 확률적으로 접근하세요.">
+        <div class="card-icon">IC</div>
+        <h3>통제 환상</h3>
+        <div class="subtitle">시장을 통제할 수 있다고 믿음</div>
+        <p>지표 10개를 겹쳐놓고 "완벽한 분석"이라 확신하지만, 시장은 예측 불가능합니다.</p>
+        <div class="example">"내 시스템은 완벽해" → 블랙 스완 이벤트 → 무방비 피격</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<footer>
+  <strong>편향을 아는 것이 극복의 시작입니다</strong>
+  트레이딩 일지를 작성하고, 규칙을 사전에 설정하며, 감정이 아닌 시스템으로 매매하세요.
+</footer>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h3 id="modal-title"></h3>
+    <div class="modal-sub" id="modal-sub"></div>
+    <p id="modal-desc"></p>
+    <div class="tip-title">극복 전략</div>
+    <div class="tip" id="modal-tip"></div>
+  </div>
+</div>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.category').forEach(el => observer.observe(el));
+
+// Modal
+function openModal(card) {
+  const color = card.dataset.color;
+  const colors = { coral: 'var(--coral)', purple: 'var(--purple)', teal: 'var(--teal)', amber: 'var(--amber)' };
+  document.getElementById('modal-title').textContent = card.dataset.title;
+  document.getElementById('modal-sub').textContent = card.dataset.sub;
+  document.getElementById('modal-sub').style.color = colors[color];
+  document.getElementById('modal-desc').textContent = card.dataset.desc;
+  document.getElementById('modal-tip').textContent = card.dataset.tip;
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+
+</body>
+</html>
